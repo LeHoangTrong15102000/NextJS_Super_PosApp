@@ -12,6 +12,12 @@
 
 ### Cấu hình http cho dự án
 
+- Login và Logout ở dự án lớn này của chúng ta sẽ có những thay đổi một chút xíu đó là chúng ta sẽ từ clientComponent gọi tới `serverNext` -> Xong rồi từ `serverNext` nó sẽ gọi tới `serverBE` cho chúng ta -> Rồi sẽ trả về kết quả cho `clientComponent`
+
+- Ở `serverComponent` hay `nextServer` để nhận biết là login hay chưa thì dựa vào `cookies` của client nó gửi lên -> Mỗi cái request client gửi lên trên `nextServer` thì nó đều tự động gửi `cookies` lên nextServer cả
+
+- Ở `clientComponent` hay `nextClient` để nhận biết được là login hay chưa thì dựa vào `localStorage`
+
 ### Tạo Login route handler
 
 ### Setup Tanstack Query và code logic login
