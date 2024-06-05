@@ -34,6 +34,28 @@
 
 ### Tạo Login route handler
 
+- Tạo route handler cho thằng `login`
+
+- Chúng ta mong muốn ng dùng gửi cái body lên như là gửi lên `serverBE` của chúng ta vậy -> Thì chúng ta muốn là gọi tới cái `route handler` là cũng như vậy
+
+- Sau khi mà nhận được accessToken và refreshToken từ `serverBE` trả về cho `nextServer` thì chúng ta sẽ tiến hành `decode`
+
+  - Mục đích decode là chúng ta lấy ra được thời điểm hết hạn của AT và
+
+  - Khi mà lấy ra được thời điểm hết hạn rồi thì chúng ta sẽ set cookies -> Vì cookies chúng ta phải quy định cái thời điểm hết hạn cho nó, chứ không thể để cookies tồn tại mãi mãi được
+
+- Khi mà lấy ra được thời gian hết hạn của AT và RT rồi thì chúng ta sẽ set `cookies` cho client.com
+
+  - cú pháp set cookies trong nextjs thì nó sẽ như sau: cookies.set(name, value, options())
+
+    - options chứa `expires: timestamp`
+
+  - set httpOnly để mà ngăn chặn client truy cập tới cookies để tránh bị tấn XSS từ phía ngoài và tránh các đoạn mã độc
+
+  - Khi mà client gửi `req` lên server thì cookie nó sẽ được tự động gửi lên server
+
+  - Thì cái exp ở bên `cookies-Next` nó nhận vào là `ms`
+
 ### Setup Tanstack Query và code logic login
 
 ### Phân tích ưu nhược điểm 2 cơ chế quản lý đăng nhập ở server và client

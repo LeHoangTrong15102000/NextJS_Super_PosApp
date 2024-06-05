@@ -129,6 +129,7 @@ const request = async <Response>(
     body,
     method
   })
+  // Convert dữ liệu từ server trả về ra dữ liệu được định dạng
   const payload: Response = await res.json()
   const data = {
     status: res.status,
@@ -204,6 +205,7 @@ const request = async <Response>(
       localStorage.removeItem('refreshToken')
     }
   }
+  // Trả về data từ  server đã được .json và được xử lý rồi
   return data
 }
 
