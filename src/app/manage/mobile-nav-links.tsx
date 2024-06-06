@@ -32,7 +32,7 @@ const MobileNavLinks = () => {
               <Link
                 key={index}
                 href={Item.href}
-                className={cn('flex items-center gap-4 px-2.5  hover:text-foreground', {
+                className={cn('flex items-center gap-4 px-2.5 hover:text-foreground', {
                   'text-foreground': isActive,
                   'text-muted-foreground': !isActive
                 })}

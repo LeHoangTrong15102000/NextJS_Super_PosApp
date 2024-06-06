@@ -128,6 +128,12 @@
 
 - Dùng middleware để điều hướng request người dùng
 
+- Chúng ta sẽ sử dụng middleware để mà điều hướng request người dùng
+
+- middleware để mà ngăn chặn thao tác người dùng vào những cái page có quyền hoặc là những page không có quyền , cái middleware này nó sẽ chạy ở môi trường server
+
 ### Code router handler logout
 
 ### Code logic logout
+
+### Xử lý tự động refreshToken khi mà accessToken hết hạn
