@@ -58,8 +58,76 @@
 
 ### Setup Tanstack Query và code logic login
 
+- thực hiện logic login cho trang web của chúng ta
+
 ### Phân tích ưu nhược điểm 2 cơ chế quản lý đăng nhập ở server và client
 
+- Phân tích ưu nhược điểm của 2 cơ chế quản lý đăng nhập ở `server` và `client`
+
+- Và cũng thực hiện logic là ẩn hiện cái menu khi mà đăng nhập thành công -> Cho phù hợp với logic của doanh nghiệp
+
+- Khuyết điểm mà quản lí trạng thái đăng nhập ở trên server bầng cookies là nó sẽ biến cái page nào có dùng cookie thành `dynamic rendering` thì nó sẽ không có build ra HTML sẵn cho chúng ta
+
+  - Vì cookie là một dynamic function nên là khi dùng nó sẽ biến cái page của chúng ta thành `dynamic rendering` -> Thì thằng này nó không trả có build ra cái HTML sẵn khi mà người dùng request vào thì nó mới tạo ra HTML -> Có nghĩa là khi mà người dùng request tới page là `dynamic rendering` thì thằng `nextServer` nó phải tốn một chút thời gian để mà `build(tạo)` ra `đoạn mã HTML` và trả về cho người dùng
+
+  - Còn thằng static thì nó đã được build ra `HTMl sẵn` rồi -> Nên là khi mà người dùng request tới serverNext thì nó chỉ cần tả về đoạn HTML đã được render sẵn rồi
+
+  - Mỗi cái `request` người dùng lên `serverNext` mà nó cứ tạo ra một đoạn mã HTML thì nó sẽ làm `tăng tải` lên serverNext của chúng ta như vậy thì sẽ không tốt
+
+    - dynamic rendering (server render on demand)
+
+  - Dùng cookie cũng được nhưng mà để tối ưu khi mà người dùng ngta truy cập vào lẹ thì nên sử dụng `static rendering`
+
+- Không dùng cookie nữa thì làm sao để mà biết được là người dùng đã `đăng nhập` ở trên server hay chưa -> Với cơ chế authentication của chúng ta hiện tại không dùng cookie thì sẽ không biết được luôn
+
+  - Trừ khi chúng ta có tạo một cái database gì đó trên server rồi và thz NextJS truy cập trực tiếp tới `database` đó thì mai ra
+
+  - CÒn bây giờ chúng ta dùng cookie thif treen server không có cách nào khác -> hiện tại chỉ có thể check ở client mà thôi
+
+  - Check ở client thì nó vẫn đảm bao cho chúng ta là `Static rendering`
+
+- Check ở client thì chúng ta sẽ sử dụng `localStorage`
+
+  - Những cái page nào nằm trongn public thì đều chịu cái `layout` cả -> Nên là nó sẽ bị ảnh hưởng bởi thằng `NavItems` nếu mà chúng ta sử dụng `cookies` `next/header` ở trong cái `NavItems` đó
+
+  - Nên là chúng ta sẽ sử dụng cái `use client` -> check ở client bằng `localStorage`
+
+  - Mặc dù đã khai báo `use client` rồi mà nó vẫn thông báo cho chúng ta là localStorage `is not defined`
+
+  - Thằng localStorage thì nó chỉ có giá trị khi mà chúng ta chạy trong môi trường browser là môi trường client
+
+  - Còn khi mà chúng ta sử dụng `use client` thì cái component của chúng ta sẽ chạy ở 2 môi trường
+
+    - Một là khi mà chúng ta build cái project
+
+    - Hai là chạy ở môi trường browser -> Thì câu lệnh npm run dev là mô phỏng một phần nào của quá trình build nên là nó lỗi trước cho chúng ta luôn
+
+  - Thì khi mà xử lý ở môi trường browser rồi thì nó vẫn chưa xong đâu vẫn còn một vài cái vấn đề nữa
+
+  - Sẽ có vấn đề khi mà code NextJS thì chúng ta sẽ gặp liên tục luôn
+
+    - Đó là vấn đề về trường hợp ở server client hiển thị nội dung khác nhau khi mà người dùng đã đăng nhập -> Và dùng cái accessToken để mà hiển thị thông tin -> Này xảy ra khi mà chúng ta đã đăng nhập rồi - `server` và `client` nó sẽ không đồng nhất về trạng thái
+
+    - Lỗi này xay ra do quá trình hydration khi mà React nó convert pre-render HTML từ server nó không có giống nhau
+
+    - Thì có một số cách fix đó là có thể dùng `useEffect` trên `client only` mà thôi -> Thay vì mà phải check trong quá trình render thì chúng ta sẽ check trong cái useEffect -> Rồi mới render ra một lần nữa thì nó sẽ không bị lỗi
+
+    - Hoặc là disable cái SSR trên component cụ thể
+
+    - Hoặc là dùng tag `SuppressHydrationWarning` là được
+
+    - Nhưng mà cách này sẽ có một nhược điểm là nó sẽ bị chớp khi mà người dùng F5 lại
+
+      - Thì phải chấp nhận
+
+      - Nếu không t hì cần phải cho nó render ở trên server mỗi khi mà người dùng nhấp vào -> Cái cách đấy sẽ đảm bảo là nó không bị chớp
+
+      - Thì cách 2 chúng ta sẽ chấp nhận nó bị chớp một tí -> Nhưng đổi lại thì chúng ta sẽ được một trang là `static rendering` rằng nó sẽ render ra HTML khi mà chúng ta `build`
+
 ### Dùng middle điều hướng request người dùng
+
+- Dùng middleware để điều hướng request người dùng
+
+### Code router handler logout
 
 ### Code logic logout
