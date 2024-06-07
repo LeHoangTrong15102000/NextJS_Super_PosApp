@@ -9,8 +9,18 @@ import { UpdateMeBody, UpdateMeBodyType } from '@/schemaValidations/account.sche
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Form, FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useUploadMediaMutation } from '@/queries/useMedia'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useAccountProfile } from '@/queries/useAccount'
 
 const UpdateProfileForm = () => {
+  const [file, setFile] = useState<File | null>(null)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+
+
+
+  const { data } = useAccountProfile()
+  const uploadMutation = useUploadMediaMutation()
   const form = useForm<UpdateMeBodyType>({
     resolver: zodResolver(UpdateMeBody),
     defaultValues: {
@@ -18,6 +28,26 @@ const UpdateProfileForm = () => {
       avatar: ''
     }
   })
+
+  const avatar = form.watch('avatar')
+  const name = form.watch('name')
+  const previewAvatar = useMemo(() => {
+    if (file) {
+      return URL.createObjectURL(file)
+    }
+    // Ban đầu khi mà vào chúng ta set avatar từ profile me vào thì sẽ lấy từ avatar từ đó còn khi mà có avatarPreview  rồi thì sẽ chọn
+    return avatar
+  }, [file, avatar])
+
+  useEffect(() => {
+    if (data) {
+      const { name, avatar } = data?.payload.data
+      form.reset({
+        name,
+        avatar: avatar ?? ''
+      })
+    }
+  }, [data, form])
 
   return (
     <Form {...form}>
@@ -35,13 +65,25 @@ const UpdateProfileForm = () => {
                   <FormItem>
                     <div className='flex items-start justify-start gap-2'>
                       <Avatar className='aspect-square h-[100px] w-[100px] rounded-md object-cover'>
-                        <AvatarImage src={'Trong'} />
-                        <AvatarFallback className='rounded-none'>{'Trong'}</AvatarFallback>
+                        <AvatarImage src={previewAvatar} />
+                        <AvatarFallback className='rounded-none'>{name}</AvatarFallback>
                       </Avatar>
-                      <input type='file' accept='image/*' className='hidden' />
+                      <input
+                        type='file'
+                        ref={avatarInputRef}
+                        accept='image/*'
+                        className='hidden'
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            setFile(file)
+                          }
+                        }}
+                      />
                       <button
                         className='flex aspect-square w-[100px] items-center justify-center rounded-md border border-dashed'
                         type='button'
+                        onClick={() => avatarInputRef?.current?.click()}
                       >
                         <Upload className='h-4 w-4 text-muted-foreground' />
                         <span className='sr-only'>Upload</span>
