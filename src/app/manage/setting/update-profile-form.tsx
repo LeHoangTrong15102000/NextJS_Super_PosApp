@@ -33,10 +33,10 @@ const UpdateProfileForm = () => {
                 name='avatar'
                 render={({ field }) => (
                   <FormItem>
-                    <div className='flex gap-2 items-start justify-start'>
-                      <Avatar className='aspect-square w-[100px] h-[100px] rounded-md object-cover'>
-                        <AvatarImage src={'Duoc'} />
-                        <AvatarFallback className='rounded-none'>{'duoc'}</AvatarFallback>
+                    <div className='flex items-start justify-start gap-2'>
+                      <Avatar className='aspect-square h-[100px] w-[100px] rounded-md object-cover'>
+                        <AvatarImage src={'Trong'} />
+                        <AvatarFallback className='rounded-none'>{'Trong'}</AvatarFallback>
                       </Avatar>
                       <input type='file' accept='image/*' className='hidden' />
                       <button
@@ -65,7 +65,7 @@ const UpdateProfileForm = () => {
                 )}
               />
 
-              <div className=' items-center gap-2 md:ml-auto flex'>
+              <div className='flex items-center gap-2 md:ml-auto'>
                 <Button variant='outline' size='sm' type='reset'>
                   Hủy
                 </Button>

@@ -7,3 +7,9 @@ export const useLoginMutation = () => {
     mutationFn: (body: LoginBodyType) => authApiRequest.login(body)
   })
 }
+
+export const useLogoutMutation = () => {
+  return useMutation({
+    mutationFn: () => authApiRequest.logout()
+  })
+}

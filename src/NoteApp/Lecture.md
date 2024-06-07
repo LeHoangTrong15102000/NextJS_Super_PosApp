@@ -148,4 +148,8 @@
 
 - Thực hiện logic logout ở trên UI - `clientComponent`
 
+- Khi mà logout xong rồi thì cho người dùng quay chở lại trang
+
+- Trường hợp khi mà gọi API thành công thì chúng ta có thể custom lại để mà thực hiện một cái hành động gì đó ở trong `queryFn` đều được
+
 ### Xử lý tự động refreshToken khi mà accessToken hết hạn

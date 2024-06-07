@@ -10,9 +10,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useLoginMutation } from '@/queries/useAuth'
 import { toast } from '@/components/ui/use-toast'
 import { handleErrorApi } from '@/lib/utils'
+import { useRouter } from 'next/navigation'
 
 export default function LoginForm() {
   const loginMutation = useLoginMutation()
+  const router = useRouter()
   const form = useForm<LoginBodyType>({
     resolver: zodResolver(LoginBody),
     defaultValues: {
@@ -29,6 +31,7 @@ export default function LoginForm() {
       toast({
         description: result.payload.message
       })
+      router.push('/manage/dashboard')
     } catch (error: any) {
       handleErrorApi({
         error,
@@ -49,7 +52,7 @@ export default function LoginForm() {
             onSubmit={form.handleSubmit(onSubmit, (err) => {
               console.log('error', err)
             })}
-            className='space-y-2 max-w-[600px] flex-shrink-0 w-full'
+            className='w-full max-w-[600px] flex-shrink-0 space-y-2'
             noValidate
           >
             <div className='grid gap-4'>

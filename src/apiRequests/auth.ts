@@ -30,7 +30,7 @@ const authApiRequest = {
 
   // logout ở client này khi mà request đến serverNext(route handler) thì AT và RT nó tự động gửi lên cái cookie rồi nên là không cần truyền
   logout: () =>
-    http.post<MessageResType>('/api/auth/logout', {
+    http.post<MessageResType>('/api/auth/logout', null, {
       baseUrl: ''
     })
 }
