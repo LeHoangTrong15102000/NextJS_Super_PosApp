@@ -62,6 +62,22 @@
 
 ### Cập nhật profile cá nhân
 
+- Sẽ thực hiện cập nhật thông tin người dùng như là `avatar` và `name`
+
+- Khi mà nhấn submit thì chúng ta sẽ kiểm tra là khi mà có `file upload ảnh` thì chúng ta sẽ cho upload ảnh để mà lấy cái `URL ảnh` từ server trả về, còn không thì thôi
+
+- Bởi vì nó là null nên là khi mà onChange thì chúng ta chỉ setFile thôi chứ chúng ta không thay đổi giá trị của thằng `avatar`, nên khi mà chúng ta nhấn onSubmit thì nó sẽ bị lỗi vì nó không vượt qua được cái validation của thằng `zod` là cần một cái `URL` kiểu là string
+
+- Khi mà cập nhật rồi thì cái hình ảnh ở userDropdown của chúng ta vẫn chưa được thay đổi thì làm sao để mà cho nó được cập nhật đây
+
+  - Thì chúng ta sẽ sử dung hàm `refetch` của thằng useQuery để mà call lại API `getAccountMe` thì lúc này thằng `userDropdown` nó sẽ lấy ra cái avatar mới cho chúng ta
+
+  - Hoặc là chúng ta có thể sử dụng hook là useQueryClient và sử dụng method của nó là `invalidateQueries({queryKey: ['account-me']})` là được
+
 ### Chức năng đổi mật
 
 ### Chức năng cập nhật
+
+## Xử lý refreshToken
+
+### Tự động logout khi mà accessToken hết hạn

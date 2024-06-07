@@ -15,7 +15,7 @@ import { Hind_Madurai } from 'next/font/google'
 import { handleErrorApi } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { toast } from '@/components/ui/use-toast'
-import { useAccountProfile } from '@/queries/useAccount'
+import { useAccountMe } from '@/queries/useAccount'
 
 // const account = {
 //   name: 'Nguyễn Văn A',
@@ -23,7 +23,7 @@ import { useAccountProfile } from '@/queries/useAccount'
 // }
 
 const DropdownAvatar = () => {
-  const { data } = useAccountProfile()
+  const { data } = useAccountMe()
   const logoutMutation = useLogoutMutation()
   const router = useRouter()
 

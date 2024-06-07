@@ -8,7 +8,13 @@ import { useForm } from 'react-hook-form'
 import { ChangePasswordBody, ChangePasswordBodyType } from '@/schemaValidations/account.schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Form, FormField, FormItem, FormMessage } from '@/components/ui/form'
+import { useChangePasswordMutation } from '@/queries/useAccount'
+import { toast } from '@/components/ui/use-toast'
+import { handleErrorApi } from '@/lib/utils'
+
 const ChangePasswordForm = () => {
+  const changePasswordMutation = useChangePasswordMutation()
+
   const form = useForm<ChangePasswordBodyType>({
     resolver: zodResolver(ChangePasswordBody),
     defaultValues: {
@@ -18,9 +24,35 @@ const ChangePasswordForm = () => {
     }
   })
 
+  const handleResetPassword = () => {
+    form.reset
+  }
+
+  const handleChangePassword = async (data: ChangePasswordBodyType) => {
+    if (changePasswordMutation.isPending) return
+    try {
+      const result = await changePasswordMutation.mutateAsync(data)
+      toast({
+        description: result.payload.message
+      })
+      form.reset()
+    } catch (error) {
+      handleErrorApi({
+        error,
+        setError: form.setError
+      })
+    }
+  }
   return (
     <Form {...form}>
-      <form noValidate className='grid auto-rows-max items-start gap-4 md:gap-8'>
+      <form
+        noValidate
+        className='grid auto-rows-max items-start gap-4 md:gap-8'
+        onReset={handleResetPassword}
+        onSubmit={form.handleSubmit(handleChangePassword, (err) => {
+          console.log('Checkk error change password', err)
+        })}
+      >
         <Card className='overflow-hidden' x-chunk='dashboard-07-chunk-4'>
           <CardHeader>
             <CardTitle>Đổi mật khẩu</CardTitle>
@@ -35,7 +67,13 @@ const ChangePasswordForm = () => {
                   <FormItem>
                     <div className='grid gap-3'>
                       <Label htmlFor='oldPassword'>Mật khẩu cũ</Label>
-                      <Input id='oldPassword' type='password' className='w-full' {...field} />
+                      <Input
+                        autoComplete='current-password'
+                        id='oldPassword'
+                        type='password'
+                        className='w-full'
+                        {...field}
+                      />
                       <FormMessage />
                     </div>
                   </FormItem>
@@ -48,7 +86,7 @@ const ChangePasswordForm = () => {
                   <FormItem>
                     <div className='grid gap-3'>
                       <Label htmlFor='password'>Mật khẩu mới</Label>
-                      <Input id='password' type='password' className='w-full' {...field} />
+                      <Input autoComplete='new-password' id='password' type='password' className='w-full' {...field} />
                       <FormMessage />
                     </div>
                   </FormItem>
@@ -61,17 +99,25 @@ const ChangePasswordForm = () => {
                   <FormItem>
                     <div className='grid gap-3'>
                       <Label htmlFor='confirmPassword'>Nhập lại mật khẩu mới</Label>
-                      <Input id='confirmPassword' type='password' className='w-full' {...field} />
+                      <Input
+                        autoComplete='new-password'
+                        id='confirmPassword'
+                        type='password'
+                        className='w-full'
+                        {...field}
+                      />
                       <FormMessage />
                     </div>
                   </FormItem>
                 )}
               />
               <div className='flex items-center gap-2 md:ml-auto'>
-                <Button variant='outline' size='sm'>
+                <Button variant='outline' size='sm' type='reset'>
                   Hủy
                 </Button>
-                <Button size='sm'>Lưu thông tin</Button>
+                <Button type='submit' size='sm'>
+                  Lưu thông tin
+                </Button>
               </div>
             </div>
           </CardContent>
