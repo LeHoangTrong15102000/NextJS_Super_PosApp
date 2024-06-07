@@ -134,6 +134,18 @@
 
 ### Code router handler logout
 
+- Cái logout của chúng ta dù sau đi nữa thì chngs ta vẫn cho nó thành công -> Kiều gì thì chúng ta cũng cho họ logout mặc dù cho đó có bị lỗi thì chúng ta sẽ xóa cookie và xóa localStorage luôn
+
+- Tóm lại khi mà logout thì kiểu gì chúng ta cũng cho nó xóa khỏi cái cookie,nếu mà trương hợp người dùng có gửi lên hay không gửi lên thì vẫn cho nó là `status: 200`
+
+  - Khi mà có lỗi thì cứ cho status là 200 chứ không cho cái khác thì bên FE toast lên lỗi thì nó sẽ không hay cho lắm,
+
+  - Dù sao đi chăng nữa thì chúng ta vẫn cho phép người dùng logout ra khi mà AT và RT hết hạn không cần biết là ngdung có gửi lên AT hay RT hay không
+
+- Đã đăng xuất thành công từ logout route handler
+
 ### Code logic logout
+
+- Thực hiện logic logout ở trên UI - `clientComponent`
 
 ### Xử lý tự động refreshToken khi mà accessToken hết hạn

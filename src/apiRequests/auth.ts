@@ -1,5 +1,5 @@
 import http from '@/lib/http'
-import { LoginBodyType, LoginResType } from '@/schemaValidations/auth.schema'
+import { LoginBodyType, LoginResType, LogoutBodyType } from '@/schemaValidations/auth.schema'
 import { MessageResType } from '@/schemaValidations/common.schema'
 
 const authApiRequest = {
@@ -9,34 +9,30 @@ const authApiRequest = {
       baseUrl: ''
     }),
   // register: (body: RegisterBodyType) => http.post<RegisterResType>('/auth/register', body),
-  auth: (body: { sessionToken: string; expiresAt: string }) =>
-    http.post('/api/auth', body, {
-      baseUrl: ''
-    }),
 
-  // API  logout truyền từ `next-server` đến `serverBE`
-  // Body nó không nhận vào là null nên chúng ta sẽ để là object rỗng
-  logoutFromNextServerToServer: (sessionToken: string) =>
+  // Do thằng sLogout chúng ta sẽ khai báo  ở môi trường server nên là nó không tự động truyền accessToken được
+  sLogout: (
+    body: LogoutBodyType & {
+      accessToken: string
+    }
+  ) =>
     http.post<MessageResType>(
       '/auth/logout',
-      {},
       {
-        // Thì thằng server-next gửi sessionToken qua server BE thông qua `Authorization`
+        refreshToken: body.refreshToken
+      },
+      {
         headers: {
-          Authorization: `Bearer ${sessionToken}`
+          Authorization: `Bearer ${body.accessToken}`
         }
       }
     ),
-  // API logout truyền từ next-client đến next-server, từ server NextJS trả về và cũng muốn response là tương tự luôn
-  logoutFromNextClientToNextServer: (force?: boolean | undefined, signal?: AbortSignal | undefined) =>
-    http.post<MessageResType>(
-      '/api/auth/logout',
-      { force },
-      {
-        baseUrl: '',
-        signal
-      }
-    )
+
+  // logout ở client này khi mà request đến serverNext(route handler) thì AT và RT nó tự động gửi lên cái cookie rồi nên là không cần truyền
+  logout: () =>
+    http.post<MessageResType>('/api/auth/logout', {
+      baseUrl: ''
+    })
 }
 
 export default authApiRequest

@@ -1,68 +1,49 @@
 // API Logout handler
 // Đã lấy ra được như ở bên dưới rồi thì cũng chả cần tới cookies nữa
-import { cookies } from 'next/headers'
 import authApiRequest from '@/apiRequests/auth'
+import { LoginBodyType } from '@/schemaValidations/auth.schema'
+import { cookies } from 'next/headers'
+import jwt from 'jsonwebtoken'
 import { HttpError } from '@/lib/http'
 
 export async function POST(request: Request) {
-  const res = await request.json()
-  const force = res.force as boolean | undefined
-  if (force) {
+  // res chính là cái body mà người dùng gửi lên và trả về dữ liệu dược định dạng
+  // Tại vì người dùng gửi lên body ở dạng là `string`
+  const cookieStore = cookies()
+  const accessToken = cookieStore.get('accessToken')?.value
+  const refreshToken = cookieStore.get('refreshToken')?.value
+  cookieStore.delete('accessToken')
+  cookieStore.delete('refreshToken')
+  // Nếu không có AT và  RT trong cái cookie
+  // Mặc dù là ngta có logout kiểu gì thì chúng ta vẫn cho là thành công mà thôi, mặc dù là không gửi lên AT và RT
+  if (!accessToken || !refreshToken) {
+    // Mặc dù là không nhận được AT và RT thì vẫn cho cái status là 200
     return Response.json(
       {
-        message: 'Buộc đăng xuất thành công'
+        message: 'Không nhận được accessToken và refreshToken'
       },
       {
-        status: 200,
-        headers: {
-          // Gửi request API từ next-client lên phía next-server
-          //  Xóa cookie sessionToken
-          'Set-Cookie': `sessionToken=; Path=/; HttpOnly; Max-Age=0`
-        }
+        status: 200
       }
     )
   }
-  const cookieStore = cookies()
-  const sessionToken = cookieStore.get('sessionToken')
-  if (!sessionToken) {
-    return Response.json(
-      { message: 'Không nhận được session token' },
-      {
-        status: 401
-      }
-    )
-  }
-
-  // Try-catch để mà gọi đến server-BE của chúng ta
   try {
-    // result.payload nó trả về unknown thì nó có hay cho lắm
-    // Gửi request từ `next-server` lên `server-BE`
-    const result = await authApiRequest.logoutFromNextServerToServer(sessionToken.value)
-    return Response.json(result.payload, {
-      status: 200,
-      headers: {
-        // Gửi request API từ next-client lên phía next-server
-        //  Xóa cookie sessionToken
-        'Set-Cookie': `sessionToken=; Path=/; HttpOnly; Max-Age=0`
-      }
+    // Từ serverNext gửi req lên serverBE
+    const result = await authApiRequest.sLogout({
+      accessToken,
+      refreshToken
     })
+    // API từ serverBE trả về cho chúng ta cái gì thì routeHandler chúng ta trả về cho người dùng cái đấy luôn
+    return Response.json(result.payload)
   } catch (error) {
-    // RouteHandler ở next-server này như là một cái proxy và khi có lỗi thì nó sẽ chạy vào trong đây và trả lỗi về cho thằng `client`
-    // Nếu mà client nhận được status lỗi là 401 thì nó sẽ thực hiện việc logout người dùng
-    // Chỉ cần xử lý logic throw lỗi chuẩn như thế này là được
-    if (error instanceof HttpError) {
-      return Response.json(error.payload, {
-        status: error.status
-      })
-    } else {
-      return Response.json(
-        {
-          message: 'Lỗi không xác định'
-        },
-        {
-          status: 500
-        }
-      )
-    }
+    // Lỗi thì chúng ta cũng sẽ return về 200 cho người ta luôn
+    return Response.json(
+      {
+        message: 'Có lỗi khi gọi API đến server Backend'
+      },
+      {
+        status: 500
+      }
+    )
   }
 }
