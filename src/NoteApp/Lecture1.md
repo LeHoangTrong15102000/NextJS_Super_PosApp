@@ -76,8 +76,52 @@
 
 ### Chức năng đổi mật
 
-### Chức năng cập nhật
-
-## Xử lý refreshToken
+- Đã thực hiện việc đổi mật khẩu thành công
 
 ### Tự động logout khi mà accessToken hết hạn
+
+- Nhưng trong trường hợp mà chúng ta không dùng web 1 thời gian. Chúng ta enter url vào thì sẽ bị hiện tượng là redirect về trang logout nhưng không có logout. Thì trong video mình sẽ handle trường hợp này nhé.
+
+- Nhưng do bên NextJS chúng ta có tận 2 môi trường là client và server lận nên là chúng ta cần phải xử lý cả 2 môi trường này
+
+- Trước tiên thì chúng ta sẽ cần phải làm cái trường hợp là khi mà AT hét hạn thì chúng ta cần phải cho nó logout ra
+
+- Mong muốn của chúng ta là phải `logout` ra khi mà AT của chúng ta hết hạn
+
+- Cookies có set AT thì khi mà nó hết hạn thì cái cookie nó sẽ tự động biến mất, còn bên localStorage thì chúng ta cần phải xóa bằng tay không như là bên cookie được
+
+- Khi mà nó hết hạn thì nó sẽ nhảy qua cái `middleware` nó check trước và nó thấy là `isAuth` là false
+
+  - Và nó sẽ redirect chúng ta về trang `login` theo cái logic mà chúng ta đã xử lý ở bên trong cái `middleware` rồi
+
+  - Và chúng ta sẽ thấy là sẽ không có hiện tượng logout nào ở đây cả vì cái `refreshToken` trong cookie vẫn còn và `AT và RT` trong `localStorage` vẫn còn
+
+  - Thì cái ý tưởng của chúng ta vẫn giống như ở bên NextJS free đó chính là chúng ta sẽ tạo ra cái page `logout`
+
+- Khi mà `logoutMutation.mutateAsync` được gọi thì nó sẽ bị thay đổi tham chiếu ngay lập tức
+
+  - Bởi vì cái `logoutMutation` là một cái `object` vì nó là một cái object nên là chúng ta mới có thể `chấm` tới các thuộc tính bên trong của nó được -> thì `logoutMutation` nó sẽ bị thay đổi tham chiếu khi mà chúng ta gọi nó
+
+  - Thì khi mà thay đổi tham chiều thì cái `callBack` trong useEffect nó sẽ bị gọi lại -> Thì nó sẽ xảy ra vòng lặp vô hạn
+
+  - Thì để mà không bị ảnh hưởng từ vòng lặp vô hạn về việc gọi `logout` -> Thì chúng ta sẽ lấy ra luôn method `mutateAsync` của logoutMutation
+
+  - Thì có thằng không phải là api logout của chúng ta mà là API của thằng nextjs nó gọi đến Nextjs để mà lấy ra các `data react` để mà phục vụ cho quá trình `hydration`
+
+- Cái chế độ `strictMode` có thể check cho chúng ta cái trường hợp mà có thể xảy ra trong thực tế là API sẽ gọi 2 lần
+
+  - Dùng abortController thì nó sẽ không hay lắm -> Vì thằng abort nó chỉ `hủy` cái kết quả trả về của chúng ta mà thôi, chứ khi mà chúng ta đã gọi -> Nhưng một khi đã gọi thì thằng server nó vẫn nhận được kết quả và nó xử lý, chỉ hủy kết quả mà nhận về thôi nên là `abortController` thì nó không hay
+
+  - Thì một chút chúng ta sẽ setTimeout cho thằng `logout` APi
+
+  - Chúng ta vẫn để chế độ react strictMode vì t rong thực tế thì cái API đó có thể gọi 2 lần nên là chúng ta cần phải cẩn thận
+
+  - Cho nên là chỗ useEffect chúng ta sẽ xử lý như thế này, mặc dù cái `callback` nó gọi 2 lần đi chăng nữa thì chúng ta sẽ làm cho cái thằng `mutateAsync` nó chỉ gọi 1 lần mà thôi
+
+  - Sẽ thông báo một cái `ref` và sau một giây mới set lại cái ref.current nên là cái `callback` nếu mà nó có chạy 2 lần trong một thời gian ngắn thì nó không thể vượt qua được cái `if (ref.current)` và không thể gọi lần thứ 2 và khi hết `1s` thì thằng ref.current nó sẽ bị set lại là null (Đã xóa đi cái react strictMode rồi thì mặc định nó là true)
+
+  - Thì đây chỉ là một cái trick nhỏ mà thôi
+
+### Xử lý trường hợp đang dùng thì hết hạn token
+
+- Thì đây chính là cái trường hợp mà chúng ta sẽ dùng `refreshToken` để mà gia hạn `accessToken`

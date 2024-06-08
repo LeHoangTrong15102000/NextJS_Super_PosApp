@@ -20,7 +20,8 @@ export async function POST(request: Request) {
     // Mặc dù là không nhận được AT và RT thì vẫn cho cái status là 200
     return Response.json(
       {
-        message: 'Không nhận được accessToken và refreshToken'
+        // message: 'Không nhận được accessToken và refreshToken'
+        message: 'Bắt buộc logout thành công!'
       },
       {
         status: 200
