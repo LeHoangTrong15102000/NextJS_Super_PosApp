@@ -31,6 +31,9 @@ const menuItems = [
 // CLient: Đầu tiên client sẽ hiển thị là Món ăn, Đăng nhập.
 // Nhưng ngay sau đó thì client render ra là Món ăn, Đơn hàng, Quản lý do đã check được trạng thái đăng nhập
 
+// Thì thằng nextClien  này do nó được render ở client nên là khi F5 nó sẽ bị giật một tí
+// Nếu mà render ở server thì sẽ không xảy ra trường hợp đó
+
 export default function NavItems({ className }: { className?: string }) {
   // Cho nó giống trên server vì server nó đâu có biết là đăng nhập hay chưa nên nó cho cái isAuth là false
   const [isAuth, setIsAuth] = useState(false)

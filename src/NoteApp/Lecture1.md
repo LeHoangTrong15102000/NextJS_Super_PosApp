@@ -122,6 +122,16 @@
 
   - Thì đây chỉ là một cái trick nhỏ mà thôi
 
+- Trường hợp khi mà người dùng gửi cho chúng ta một cái đường logout vô tình làm chúng ta logout ra thì không hay cho lắm
+
+- Và chúng ta chỉ thực hiện logout khi mà cái accessToken gửi lên nó khớp với cái accessToken trong localStorage thì chúng ta mới cho nó gửi lên mà thôi
+
+- Chỗ privatePath phải check một tí xíu nữa chứ không phải chưa đăng nhập mà lúc nào cũng redirect về `/logout`
+
+- Bây giờ nếu mà có ai gửi cho chúng ta đường link logout thì chắc chắn là chúng ta sẽ không bị `logout` ra
+
+- Còn trường hợp mà khi mà refreshToken cũng hết hạn luôn thì nếu mà người dùng lâu ngày ko vào thì nó sẽ không tự động logout cho người dùng mà nó sẽ bị đứng ở trang `logout`
+
 ### Xử lý trường hợp đang dùng thì hết hạn token
 
 - Thì đây chính là cái trường hợp mà chúng ta sẽ dùng `refreshToken` để mà gia hạn `accessToken`
