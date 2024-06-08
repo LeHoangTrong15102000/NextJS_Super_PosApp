@@ -35,7 +35,7 @@ const LogoutPage = () => {
         router.push('/login')
       })
   }, [mutateAsync, router, refreshTokenFromLocalStorage])
-  return <div>Logout page</div>
+  return <div>Log out...</div>
 }
 
 export default LogoutPage

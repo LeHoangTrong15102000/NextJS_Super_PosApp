@@ -132,6 +132,10 @@
 
 - Còn trường hợp mà khi mà refreshToken cũng hết hạn luôn thì nếu mà người dùng lâu ngày ko vào thì nó sẽ không tự động logout cho người dùng mà nó sẽ bị đứng ở trang `logout`
 
+- Còn trường hợp mà người dùng chưa đăng nhập thật thì lấy đâu ra cái refreshToken để mà `logout` ra được -> Nên là chúng ta sẽ xử lý lại một chút xíu ở phần `middleware`
+
+- Chỗ mà xử lý lỗi 401 khi mà gọi token ở bên http là để xử lý trường hợp gian hạn accessToken mới
+
 ### Xử lý trường hợp đang dùng thì hết hạn token
 
 - Thì đây chính là cái trường hợp mà chúng ta sẽ dùng `refreshToken` để mà gia hạn `accessToken`

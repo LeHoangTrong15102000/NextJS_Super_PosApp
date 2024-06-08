@@ -82,7 +82,7 @@ const UpdateProfileForm = () => {
       toast({
         description: result.payload.message
       })
-      router.refresh()
+      // router.refresh()
     } catch (error) {
       handleErrorApi({
         error,
