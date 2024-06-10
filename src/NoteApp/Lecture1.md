@@ -170,7 +170,50 @@
 
 ### Phân tích cơ chế refreshToken ở NextJS
 
+`Refresh Token  Trong NextJS`
+
+Các API yêu cầu Authentication có thể được gọi ở 2 nơi
+
+1. Server Component: Ví dụ page `/account/me` cần gọi API `/me` ở server component để lấy thông tin profile của user
+2. Client Component: Ví dụ page `/account/me` cần gọi API `/me` ở client component để lấy thông tin profile của user
+
+=> Hết hạn token có thể xảy ra ở Server Component và Client Component
+
+Các trường hợp hết hạn access token
+
+- Đang dùng thì hết hạn: Chúng ta sẽ không để trường hợp này xảy ra, bằng cách có 1 setinterval check token liên tục để refresh token trước khi nó hết hạn
+
+- Chúng ta xử lý cái trường hợp mà đợi AT hết hạn rồi RT thì những cái trường hợp đó vừa phức tạp vừa có thể xảy ra bug nữa -> Nên là chúng ta cần phải xử lý theo cái trường hợp khác là dùng `setInterval` để mà khi còn 10p hay gì đó thì chúng ta sẽ set lại `accessToken`
+
+- Lâu ngày không vào web, vào lại thì hết hạn:
+
+Khi vào lại website thì middleware.ts sẽ được gọi đầu tiên. Chúng ta sẽ kiểm tra xem access token còn không (vì access token sẽ bị xóa khi hết hạn), nếu không còn thì chúng ta sẽ gọi cho redirect về page client component có nhiệm vụ gọi API refresh token và redirect ngược về trang cũ
+
+- Vì khi mà AT hết hạn mà người dùng vào một cái page thì nó sẽ req lên server thì lúc này AT đã hết hạn rồi thì server sẽ tiến hành RT cho người dùng
+
+- Cho redirect về cái page là RT tại cái page đó thì chúng ta sẽ thực hiên RT và sau đó là quay lại trang cũ như ban đâu cho người dùng
+
+  - RT xong rồi thì chúng ta sẽ quay về lại trang cũ cho người dùng
+
+- Trong cái middleware là chúng ta sẽ kiểm tra cái AT có còn không, nếu không còn thì cho redirect về cái page client component
+
+- Vì lúc người dùng off thì đâu có những cái req được gửi tới serverBE đâu nên là đâu biết được là AT còn hạn hay không
+
+  - Nên là khi người dùng onl thì mới gửi req tới cho server thì lúc này mới kiểm tra được là AT còn hạn hay không nên là lúc này mới thực hiện RT cho người dùng
+
+  - Mọi thứ sẽ diễn
+
+Lưu ý để tránh bị bug khi thực hiện Đang dùng thì hết hạn
+
+- Không để refresh token bị gọi duplicate
+- Khi refresh token bị lỗi ở route handler => trả về 401 bất kể lỗi gì
+- Khi refrest token bị lỗi ở useEffect client => ngừng interval ngay
+- Đưa logic check vào layout ở trang authenticated: Không cho chạy refresh token ở những trang mà unauthenticated như: login, logout
+- Kiểm tra logic flow trong middleware
+
 ### Tạo refreshToken route handler
+
+- Tạo route handler `refresh-token` trong nextJS
 
 ### Xử lý trường hợp đang dùng thì hết hạn token, tiến hành RT để mà gia hạn cho AT
 
@@ -178,4 +221,8 @@
 
 - Nếu mà AT và RT đều hết hạn thì chúng ta bắt buộc người dùng phải logout ra khỏi `website` -> Và buộc người dùng phải đăng nhập lại thì mới có thể tiếp tục sử dụng website được
 
-### Thực hiện chức năng refreshToken cho người dùng khi mà AT hết hạn
+### Thực hiện chức năng refreshToken cho người dùng lâu ngày vào và AT hết hạn và thằng RT vẫn còn hạn
+
+- Thì cái trường hợp này chính là cái trường hợp mà người dùng lâu ngày rồi mới vào lại trang web thay vì chúng ta logout ngừơi dùng khi mà họ vào lại trang sau khi lâu rồi không sử dụng
+
+- Thì lúc này chúng ta sẽ thực hiện redirect ng dùng vào một trang khác để mà thực hiện lại RT xong rồi quay lại treang ban đầu -> Cách này sẽ là cách thực hiện đầy đủ hơn của cách bài 34
