@@ -32,6 +32,7 @@ export default function LoginForm() {
         description: result.payload.message
       })
       router.push('/manage/dashboard')
+      // router.refresh()
     } catch (error: any) {
       handleErrorApi({
         error,

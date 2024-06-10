@@ -1,7 +1,7 @@
 import envConfig from '@/config'
 import { normalizePath } from '@/lib/utils'
 import { LoginResType } from '@/schemaValidations/auth.schema'
-import { redirect } from 'next/navigation'
+import { redirect, useRouter } from 'next/navigation'
 
 type CustomOptions = Omit<RequestInit, 'method'> & {
   baseUrl?: string | undefined
@@ -18,6 +18,8 @@ type EntityErrorPayload = {
     message: string
   }[]
 }
+
+// const router = useRouter()
 
 // Nên throw một cái object nó kế thừa lỗi từ một cái object error,để khi mà có bị lỗi tại đâu thì nó sẽ show ra được dòng lỗi cho chúng ta, còn throw bình thường thì nó không có để lỗi đâu
 export class HttpError extends Error {
@@ -189,6 +191,8 @@ const request = async <Response>(
       throw new HttpError(data)
     }
   }
+
+  // Nếu là res.ok thì nếu mà người dùng login hay logout thì xử lý như bên dưới
   //  Xử lý sau khi login hoặc là register thì sẽ set giá trị cho clientSessionToken luôn
   // Đảm bảo logic chỉ chạy ở phía client(browser)
   if (isClient) {

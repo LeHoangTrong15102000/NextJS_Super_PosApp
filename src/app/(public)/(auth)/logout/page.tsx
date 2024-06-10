@@ -1,7 +1,7 @@
 'use client'
 
 import { toast } from '@/components/ui/use-toast'
-import { getRefreshTokenFromLocalStorage } from '@/lib/utils'
+import { getAccessTokenFromLocalStorage, getRefreshTokenFromLocalStorage } from '@/lib/utils'
 import { useLogoutMutation } from '@/queries/useAuth'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useRef } from 'react'
@@ -9,12 +9,22 @@ import { useEffect, useRef } from 'react'
 const LogoutPage = () => {
   const { mutateAsync } = useLogoutMutation()
   const searchParams = useSearchParams()
+
   const refreshTokenFromUrl = searchParams.get('refreshToken')
+  const accessTokenFromUrl = searchParams.get('accessToken')
   const refreshTokenFromLocalStorage = getRefreshTokenFromLocalStorage()
+  const accessTokenFromLocalStorage = getAccessTokenFromLocalStorage()
+
   const router = useRouter()
   const ref = useRef<any>(null)
   useEffect(() => {
-    if (ref.current || refreshTokenFromUrl !== refreshTokenFromLocalStorage) return
+    if (
+      ref.current ||
+      (refreshTokenFromUrl && refreshTokenFromUrl !== refreshTokenFromLocalStorage) ||
+      (accessTokenFromUrl && accessTokenFromUrl !== accessTokenFromLocalStorage)
+    ) {
+      return
+    }
     ref.current = mutateAsync
     mutateAsync()
       .then((res) => {
@@ -26,15 +36,16 @@ const LogoutPage = () => {
         toast({
           description: messageResult
         })
+        // localStorage.removeItem('accessToken')
+        // localStorage.removeItem('refreshToken')
         router.push('/login')
+        // router.refresh()
       })
       .catch((err) => {
         console.log('error', err)
       })
-      .finally(() => {
-        router.push('/login')
-      })
-  }, [mutateAsync, router, refreshTokenFromLocalStorage])
+      .finally(() => {})
+  }, [mutateAsync, router, refreshTokenFromUrl, accessTokenFromUrl])
   return <div>Log out...</div>
 }
 
