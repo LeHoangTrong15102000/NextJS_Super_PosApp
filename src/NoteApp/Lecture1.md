@@ -136,6 +136,46 @@
 
 - Chỗ mà xử lý lỗi 401 khi mà gọi token ở bên http là để xử lý trường hợp gian hạn accessToken mới
 
-### Xử lý trường hợp đang dùng thì hết hạn token
+### Tự động logout khi mà gọi API bị lỗi 401 ở client component
 
-- Thì đây chính là cái trường hợp mà chúng ta sẽ dùng `refreshToken` để mà gia hạn `accessToken`
+- Trường hợp này chúng ta cũng đã xử lý ở trong file `HTTP` rồi
+
+### Tự động logout khi gọi API bị lỗi 401 ở server component
+
+- Và đây là trường hợp mà trên server nó handle bị lỗi và trả về lỗi 401 cho chúng ta thì chúng ta cần phải logout người dùng ra khỏi trình duyệt
+
+- Nên là trong trường hợp đây thì chúng ta nên cho cái website chúng ta logout ra
+
+- Thì cái trường hợp mà người dùng vào những client component và bị lỗi 401
+
+- Thì thằng middleware nó chỉ có check là có AT và RT hay không thôi chứ nó không có ch eck là có AT và RT nó có đúng ở trên server hay không bởi vì nó đâu có gọi 1 cái API nào để mà check đâu
+
+- Còn trong cái trường hợp này chúng ta đang nói tới là khi gọi API đến `serverBE` `(Chứ không phải là serverNextJS)` Và vì cái lý do gì đó mà serverBE trả về lỗi 401
+
+- Chúng ta sẽ test cái trường hợp là mỗi thứ nó còn hạn sử dụng, nhưng không biết là vì lý do gì đấy mà nó bị lỗi 401 ở `server component` -> Nên là chúng ta cần phải logout người dùng ra khỏi website
+
+- Khi mà fetchAPI ở serverBE thì nó không có hiện tượng chơp nháy gì cả mà nó sẽ có luôn dữ liệu của chúng ta
+
+- Thì chúng ta sẽ thử sửa lại thằng accessToken ở cookies lại và sau đó reload lại -> Thì thằng middleware nó vẫn cho phép đi qua vì nó kiểm tra là có AT chứ không kt là AT có đúng với AT ở dưới serverBE hay không
+
+- Khi mà chúng ta `redirect` ở serverCOmponent thì nó sẽ throw ra cho chúng ta một lỗi, nếu mà chúng ta catch nó lại thì nó sẽ không có `throw` ra một cách thoải mái và `redirect` người dùng được -> Hiểu đơn giản là khi mà chúng ta mà catch thì nó sẽ không `redirect` được
+
+  - Chúng ta đừng có `try` - `catch` gì thì nó sẽ throw một cách thoải mái
+
+  - Khi mà nó throw lỗi thành công thì nó sẽ `redirect` về trang logout cho chúng ta, còn không khi mà throw thì nó vẫn chạy xuống và return ra đoạn mã `TSX` và sẽ không làm cho chúng ta redirect về trang logout được
+
+  - Nên là nếu mà chúng ta `try-catch` thì chúng ta cần phải check digest là `NEXT_REDIRECT` thì mới được
+
+- Thì những cái trường hợp mà gọi API bị lỗi những cái lỗi không phải 401 thì nó sẽ làm cái trang chúng ta bị `trắng` -> Thì cách nào cũng có cái ưu nhược điểm riêng của nó cả, Và cách xử lý lỗi 401 ở logout như này cũng được
+
+### Phân tích cơ chế refreshToken ở NextJS
+
+### Tạo refreshToken route handler
+
+### Xử lý trường hợp đang dùng thì hết hạn token, tiến hành RT để mà gia hạn cho AT
+
+- Nếu mà người dùng đang sử dụng mà AT hết hạn thì chúng ta sẽ gia hạn AT cho người dùng
+
+- Nếu mà AT và RT đều hết hạn thì chúng ta bắt buộc người dùng phải logout ra khỏi `website` -> Và buộc người dùng phải đăng nhập lại thì mới có thể tiếp tục sử dụng website được
+
+### Thực hiện chức năng refreshToken cho người dùng khi mà AT hết hạn

@@ -39,7 +39,11 @@ const authApiRequest = {
     http.post<MessageResType>('/api/auth/logout', null, {
       baseUrl: ''
     }),
-  refreshToken: (body: RefreshTokenBodyType) => http.post<RefreshTokenResType>('/auth/refresh-token', body)
+  sRefreshToken: (body: RefreshTokenBodyType) => http.post<RefreshTokenResType>('/auth/refresh-token', body),
+  refreshToken: () =>
+    http.post<RefreshTokenResType>('/api/auth/refresh-token', null, {
+      baseUrl: ''
+    })
 }
 
 export default authApiRequest
