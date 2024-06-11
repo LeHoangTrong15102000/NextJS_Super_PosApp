@@ -215,11 +215,17 @@ Lưu ý để tránh bị bug khi thực hiện Đang dùng thì hết hạn
 
 - Tạo route handler `refresh-token` trong nextJS
 
+- Những gì chinh sửa cookie liên quan tới Nextjs server thì phải thông qua `route handler`
+
 ### Xử lý trường hợp đang dùng thì hết hạn token, tiến hành RT để mà gia hạn cho AT
 
 - Nếu mà người dùng đang sử dụng mà AT hết hạn thì chúng ta sẽ gia hạn AT cho người dùng
 
 - Nếu mà AT và RT đều hết hạn thì chúng ta bắt buộc người dùng phải logout ra khỏi `website` -> Và buộc người dùng phải đăng nhập lại thì mới có thể tiếp tục sử dụng website được
+
+- Khi mà đang dùng mà AT gần hết hạn thì chúng ta sẽ RT nhưng nếu mà trong lúc RT có bị lỗi thì lúc đó có thể là do RT hết hạn hoặc là bị vấn đề gì đó thì chúng ta sẽ đá ng dùng về trang login
+
+- Khi mà cóa lỗi 401 thì chúng ta sẽ gọi đến `http` và sẽ redirect ng dùng về trang login, vì thz refreshToken của chúng tá là sẽ thực hiện ở `client component`
 
 ### Thực hiện chức năng refreshToken cho người dùng lâu ngày vào và AT hết hạn và thằng RT vẫn còn hạn
 

@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken'
 export async function POST(request: Request) {
   const cookieStore = cookies()
   const refreshToken = cookieStore.get('refreshToken')?.value
+  // Khi mà gọi refreshToken mà bị lỗi thì chúng ta sẽ trả về lỗi là 401 để cho người dùng logout ra
   if (!refreshToken) {
     //
     return Response.json(
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
       exp: number
     }
 
+    // Gia hạn accessToken
     cookieStore.set('accessToken', payload.data.accessToken, {
       path: '/',
       httpOnly: true,
@@ -44,6 +46,7 @@ export async function POST(request: Request) {
 
     return Response.json(payload)
   } catch (error: any) {
+    // Nếu có cái vấn đề gì đó trong lúc gọi refreshToken thì cũng trả về lỗi 401 luôn
     console.log('Checkk error refreshToken', error)
     return Response.json(
       {
