@@ -227,6 +227,10 @@ Lưu ý để tránh bị bug khi thực hiện Đang dùng thì hết hạn
 
 - Khi mà cóa lỗi 401 thì chúng ta sẽ gọi đến `http` và sẽ redirect ng dùng về trang login, vì thz refreshToken của chúng tá là sẽ thực hiện ở `client component`
 
+- Thực hiện cái trường hợp mà khi chúng ta đang dùng mà cái AT của chúng ta nó hết hạn thì chúng ta sẽ không để cái trường hợp này nó xảy ra và chúng ta sẽ check liên tục cái `setInterval` và refresh nó liên tục trước khi mà nó hết hạn
+
+- Khi mà gọi trong cái app-provider thì cả cái app của chúng ta đều dính cái refresh-token nầy cả
+
 ### Thực hiện chức năng refreshToken cho người dùng lâu ngày vào và AT hết hạn và thằng RT vẫn còn hạn
 
 - Thì cái trường hợp này chính là cái trường hợp mà người dùng lâu ngày rồi mới vào lại trang web thay vì chúng ta logout ngừơi dùng khi mà họ vào lại trang sau khi lâu rồi không sử dụng

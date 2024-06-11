@@ -21,14 +21,14 @@ export async function POST(request: Request) {
       httpOnly: true,
       sameSite: 'lax',
       secure: true,
-      expires: new Date(decodedAccessToken.exp * 1000)
+      expires: decodedAccessToken.exp * 1000
     })
     cookieStore.set('refreshToken', refreshToken, {
       path: '/',
       httpOnly: true,
       sameSite: 'lax',
       secure: true,
-      expires: new Date(decodedRefreshToken.exp * 1000)
+      expires: decodedRefreshToken.exp * 1000
     })
 
     // API từ serverBE trả về cho chúng ta cái gì thì routeHandler chúng ta trả về cho người dùng cái đấy luôn
