@@ -40,12 +40,16 @@ export default function NavItems({ className }: { className?: string }) {
   const accessTokenFromLocalStorage = getAccessTokenFromLocalStorage()
   const [isAuth, setIsAuth] = useState(false)
 
+  // useEffect(() => {
+  //   if (accessTokenFromLocalStorage) {
+  //     setIsAuth(Boolean(getAccessTokenFromLocalStorage()))
+  //   }
+  //   setIsAuth(false)
+  // }, [accessTokenFromLocalStorage])
+
   useEffect(() => {
-    if (accessTokenFromLocalStorage) {
-      setIsAuth(Boolean(getAccessTokenFromLocalStorage()))
-    }
-    setIsAuth(false)
-  }, [accessTokenFromLocalStorage])
+    setIsAuth(Boolean(accessTokenFromLocalStorage))
+  }, [])
 
   return menuItems.map((item) => {
     if ((item.authRequired === false && isAuth) || (item.authRequired === true && !isAuth)) return null

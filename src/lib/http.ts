@@ -148,7 +148,9 @@ const request = async <Response>(
           payload: EntityErrorPayload
         }
       )
-    } else if (res.status === AUTHENTICATION_ERROR_STATUS) {
+    }
+    // Khi mà goi đến server bị lỗi 401 thì nó sẽ chạy vào đây
+    else if (res.status === AUTHENTICATION_ERROR_STATUS) {
       // Do cái file đều có thể gọi client-next và server-next, nên là chúng ta cần phải kiểm tra điều kiện trước khi gọi
       // Nếu mà lỗi 401 ở client thì
       if (isClient) {
@@ -175,7 +177,7 @@ const request = async <Response>(
             clientLogoutRequest = null
             // Và cho nó redirect sang cái page là login
             // Redirect về trang login có thể dẫn đến lặp vô hạn, nếu không được xử lý đúng cách, vì nếu rơi vào trường hợp tại trang login chúng ta có gọi các API cần accessToken, mà accessToken bị xóa thì nó lại nhảy vào đây, và cứ thể nó sẽ bị lặp
-            location.href = '/login'
+            location.href = '/login' // thằng location.href nó sẽ làm cho cái app của chúng ta bị refresh thì cái network-tab nó sẽ bị clear đi, nên là chúng ta không thể nào mà debug để mà check được
           }
         }
       } else {

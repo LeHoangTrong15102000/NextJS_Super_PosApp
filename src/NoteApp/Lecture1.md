@@ -231,6 +231,16 @@ Lưu ý để tránh bị bug khi thực hiện Đang dùng thì hết hạn
 
 - Khi mà gọi trong cái app-provider thì cả cái app của chúng ta đều dính cái refresh-token nầy cả
 
+- Khi mà refreshToken thành công mà lần tiếp theo chúng ta lại gửi lên cái RT cũ thì nó sinh ra lỗi -> Để mà giải thích cho cái lý do đấy thì có thể là cái API RT của chúng bị duplicate khi mà gọi hoặc là do thời gian gọi quá suýt sát nhau nên là nó sinh ra lỗi
+
+- Vấn đề là do chúng ta chưa có clean up cái function interval nên là khi mà chúng ta đang gọi mà chúng ta chuyển trang thì thằng kia nó đang gọi và nó chưa có kịp set AT và RT vào localStorage thì thăng kia nó lại lấy lại cái AT và RT cũ và nó thực hiện cái callback-Interval nữa nên là nó sinh ra (Bởi vì khi mà gọi xong cái RT thì thằng database dưới nó sẽ xóa đi cái RT cũ ) - nên là khi cái thằng mới dùng tới RT cũ để thực hiện việc callAPI thì nó sẽ nó sẽ không tìm thấy `RT` ở dưới database và nó sẽ bị lỗi
+
+- Để mà cho nó không bị duplicate nữa thì khai báo một biến là `refreshTokenRequest` để khi mà đang gọi tới API `refresh-token` thì cái biến này sẽ có giá trị và các thằng khác gọi tới để mà thực hiện sẽ không được -> Sẽ tránh được tình trạng `duplicate`
+
+- Trình duyệt bây giờ có cơ chế fetch trước cái trang web của chúng ta mặc dù là chúng ta chưa đi vào trang web -> Thì chắc là cái cơ chế `pre-fetch` cái trang web của chúng ta gi úp cho chúng ta vào cái trang web nó nhanh hơn
+
+  - Thì cơ chế này thì cũng được thôi giúp cho người dùng có trải nghiệm tốt hơn khi mà vào trang web cả AT và RT đều đã hết hạn -> Thì lúc này nó sẽ pre-fetch trước cái `logout` tăng trài nghiệm hơn -> Thay vì người dùng vào rồi nó mới bắt đầu `fetch` và `logout`
+
 ### Thực hiện chức năng refreshToken cho người dùng lâu ngày vào và AT hết hạn và thằng RT vẫn còn hạn
 
 - Thì cái trường hợp này chính là cái trường hợp mà người dùng lâu ngày rồi mới vào lại trang web thay vì chúng ta logout ngừơi dùng khi mà họ vào lại trang sau khi lâu rồi không sử dụng

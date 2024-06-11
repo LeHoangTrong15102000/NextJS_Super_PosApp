@@ -9,6 +9,11 @@ import {
 import { MessageResType } from '@/schemaValidations/common.schema'
 
 const authApiRequest = {
+  // Một cái biến để check xem là cái API refresh-token đã được call hay chưa nếu đang gọi thì ko cho các thằng khác gọi vào
+  refreshTokenRequest: null as Promise<{
+    status: number
+    payload: RefreshTokenResType
+  }> | null,
   sLogin: (body: LoginBodyType) => http.post<LoginResType>('/auth/login', body),
   login: (body: LoginBodyType) =>
     http.post<LoginResType>('/api/auth/login', body, {
@@ -40,10 +45,19 @@ const authApiRequest = {
       baseUrl: ''
     }),
   sRefreshToken: (body: RefreshTokenBodyType) => http.post<RefreshTokenResType>('/auth/refresh-token', body),
-  refreshToken: () =>
-    http.post<RefreshTokenResType>('/api/auth/refresh-token', null, {
+  async refreshToken() {
+    // Nếu mà đã có rồi thì trả về luôn để tranh thằng khác gọi thêm trong 1 khoảng t/g ngắn gay ra duplicate
+    if (this.refreshTokenRequest) {
+      // Nếu nó đang khác null thì return  lại chính nó chứ không có nhảy xuống dưới
+      return this.refreshTokenRequest
+    }
+    this.refreshTokenRequest = http.post<RefreshTokenResType>('/api/auth/refresh-token', null, {
       baseUrl: ''
     })
+    const result = await this.refreshTokenRequest
+    this.refreshTokenRequest = null
+    return result
+  }
 }
 
 export default authApiRequest
