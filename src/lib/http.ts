@@ -181,6 +181,7 @@ const request = async <Response>(
           }
         }
       } else {
+        // Khi gọi API ở serverComponet lên serverBE mà bị lỗi 401 gì đó, thì chúng ta sẽ cho ng dùng logout luôn
         // Và chúng ta gọi API ở server Nextjs (router handler, server component) đến serverBE thì chúng ta cũng sẽ cho logout luôn
         // lấy sessionToken từ trên cái headers ở server component truyền lên  serverBE
         // Cái headers.Authorization là từ cái thằng `request` server component mà chúng ta truyền lỗi cái sessionToken lên

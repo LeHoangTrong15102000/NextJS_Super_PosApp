@@ -11,10 +11,10 @@ import { useLoginMutation } from '@/queries/useAuth'
 import { toast } from '@/components/ui/use-toast'
 import { handleErrorApi, removeTokensFromLocalStorage } from '@/lib/utils'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { useAppContext } from '@/components/app-provider'
 
-export default function LoginForm() {
+function LoginFormLogic() {
   const { isAuth, setIsAuth } = useAppContext()
   const loginMutation = useLoginMutation()
 
@@ -111,3 +111,13 @@ export default function LoginForm() {
     </Card>
   )
 }
+
+const LoginForm = () => {
+  return (
+    <Suspense>
+      <LoginFormLogic />
+    </Suspense>
+  )
+}
+
+export default LoginForm
