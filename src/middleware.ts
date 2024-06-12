@@ -7,6 +7,7 @@ const unAuthPaths = ['/login']
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
+  // Url người dùng vừa mới enter vào cái trình duyệt
   const { pathname } = request.nextUrl
   // pathname: /manage/dashboard
   // const cookieStore = cookies()
@@ -30,8 +31,9 @@ export function middleware(request: NextRequest) {
   // Trường hợp đăng nhập rồi, nhưng accessToken lại hết hạn và cũng có thể là refreshToken
   // Do chưa xử lý refreshToken nên khi mà AT hết hạn và còn RT thì cho người dùng logout
   if (privatePaths.some((path) => pathname.startsWith(path)) && !accessToken && refreshToken) {
-    const url = new URL('/logout', request.url)
-    url.searchParams.set('refreshToken', refreshToken ?? '')
+    const url = new URL('/refresh-token', request.url)
+    url.searchParams.set('refreshToken', refreshToken)
+    url.searchParams.set('redirect', pathname)
     return NextResponse.redirect(url)
   }
   return NextResponse.next()

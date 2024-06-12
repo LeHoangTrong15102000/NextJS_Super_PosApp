@@ -3,9 +3,10 @@ import { EntityError } from '@/lib/http'
 import { type ClassValue, clsx } from 'clsx'
 import { UseFormSetError } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
-import jwt from 'jsonwebtoken'
 import { DishStatus, TableStatus } from '@/constants/type'
 import envConfig from '@/config'
+import jwt from 'jsonwebtoken'
+import authApiRequest from '@/apiRequests/auth'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -45,6 +46,51 @@ export const getRefreshTokenFromLocalStorage = () => (isBrowser ? localStorage.g
 
 export const setAccessTokenToLocalStorage = (value: string) => isBrowser && localStorage.setItem('accessToken', value)
 export const setRefreshTokenToLocalStorage = (value: string) => isBrowser && localStorage.setItem('refreshToken', value)
+
+// Check and Refresh Token
+
+export const checkAndRefreshToken = async (param?: { onError?: () => void; onSuccess?: () => void }) => {
+  // Không nên đưa logic lấy accessToken và refreshToken ra khỏi cái function này
+  // Vì để mỗi lần mà checkAndRefreshToken được gọi thì chúng ta sẽ có AT và RT mới
+  // Tránh hiện tượng nó lấy AT và RT cũ rồi gọi cho lần tiếp theo
+  const accessToken = getAccessTokenFromLocalStorage()
+  const refreshToken = getRefreshTokenFromLocalStorage()
+  // Chưa đăng nhập thì cũng không cho chạy
+  if (!accessToken || !refreshToken) return
+
+  const decodedAccessToken = jwt.decode(accessToken) as {
+    exp: number
+    iat: number
+  }
+  const decodedRefreshToken = jwt.decode(refreshToken) as {
+    exp: number
+    iat: number
+  }
+  //  Thời điểm hết hạn của token là tính theo epoch time (s)
+  // Còn khi chúng ta dùng cú pháp new Date().getTime() thì nó sẽ trả về epoch time là (ms)
+
+  // Lấy ra thời điểm hiện tại theo s, math.round là để nó làm tròn
+  const now = Math.round(new Date().getTime() / 1000)
+  // Trường hợp refreshToken hết hạn thì không xử lý nữa
+  if (decodedRefreshToken.exp <= now) return
+  // Ví dụ accessToken của chúng ta có thời gian hết hạn là 10s
+  // Thì mình sẽ kiểm tra còn 1/3 thời gian thì chúng ta sẽ cho refreshToken lại
+  // Thời gian còn lại sẽ dựa trên: decodedAccessToken.exp - now <= 3
+  // Thời gian hết hạn AT decodedAccessToken.exp - decodedAccessToken.iat
+  if (decodedAccessToken.exp - now < (decodedAccessToken.exp - decodedAccessToken.iat) / 3) {
+    // Gọi API refreshToken
+    try {
+      const { payload } = await authApiRequest.refreshToken()
+      setAccessTokenToLocalStorage(payload.data.accessToken)
+      setRefreshTokenToLocalStorage(payload.data.refreshToken)
+      param?.onSuccess && param.onSuccess()
+    } catch (error) {
+      // Khi bị lỗi thì chúng ta sẽ logout vì đã handle ở bên route handler khi bị lỗi 401,
+      // Cùng với đó là clearInterval
+      param?.onError && param.onError()
+    }
+  }
+}
 
 /**
  * Xóa đi ký tự `/` đầu tiên của path

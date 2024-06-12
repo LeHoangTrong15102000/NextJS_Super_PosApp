@@ -246,3 +246,17 @@ Lưu ý để tránh bị bug khi thực hiện Đang dùng thì hết hạn
 - Thì cái trường hợp này chính là cái trường hợp mà người dùng lâu ngày rồi mới vào lại trang web thay vì chúng ta logout ngừơi dùng khi mà họ vào lại trang sau khi lâu rồi không sử dụng
 
 - Thì lúc này chúng ta sẽ thực hiện redirect ng dùng vào một trang khác để mà thực hiện lại RT xong rồi quay lại treang ban đầu -> Cách này sẽ là cách thực hiện đầy đủ hơn của cách bài 34
+
+- Khi vào lại website thì middleware.ts sẽ được gọi đầu tiên. Chúng ta sẽ kiểm tra xem access token còn không (vì access token sẽ bị xóa khi hết hạn), nếu không còn thì chúng ta sẽ gọi cho redirect về page client component có nhiệm vụ gọi API refresh token và redirect ngược về trang cũ
+
+- Lưu ý để tránh bị bug khi thực hiện Đang dùng thì hết hạn
+
+  - Không để refresh token bị gọi duplicate
+  - Khi refresh token bị lỗi ở route handler => trả về 401 bất kể lỗi gì
+  - Khi refrest token bị lỗi ở useEffect client => ngừng interval ngay
+  - Đưa logic check vào layout ở trang authenticated: Không cho chạy refresh token ở - những trang mà unauthenticated như: login, logout
+  - Kiểm tra logic flow trong middleware
+
+- Khi mà người dùng lâu ngày không vào thì AT lúc này đã hết hạn và còn RT thì lúc này chúng ta sẽ chuyển ng dùng về trang `refresh-token` để mà `xác thực` lại cho người dùng, để ng dùng có thể thao tác lại được với trang web
+
+- Sau khi mà RT lại cho người dùng rồi thì chúng ta sẽ `redirect` lại cái `route` mà lúc đầu người dùng nhấn vào
