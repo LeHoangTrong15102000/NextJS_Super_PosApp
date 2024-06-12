@@ -278,3 +278,13 @@ Lưu ý để tránh bị bug khi thực hiện Đang dùng thì hết hạn
 ### Xử lý RT hết hạn khi người dùng lâu ngày không vào lại trang web
 
 - Trường hợp này thì khi mà ng lâu ngày mà vào trang thì lúc này cả AT và RT nó đều hết hạn cả
+
+- Thì lúc này khi mà người dùng lâu ngày không vào trang web -> Thì lúc này khi vào rồi thì user sẽ bị logout ra nhưng sẽ có một cái bug đó là khi mà redirect về trang login rồi nhưng mà cái `navItems` nó sử dụng cái localStorage để mà xác nhận trạng thái nhưng mà cái `localStorage` chúng ta chưa có xóa thì nó sẽ xảy ra bug đó lá trạng thái `navItems` khi mà đăng nhập vẫn còn, mặc dù thì `accessToken` và `refreshToken` đều đã hết hạn rồi
+
+- Nên là nhiệm vụ của chúng ta khi mà redirect về trang `login` thì sẽ xóa khỏi `localStorage` luôn
+
+- Nhưng mà nó cũng tiềm ẩn một cái rủi ro đó chính khi mà cái `loginForm` và `navItems` cùng nằm trên một cái page nên là 2 cái useEffect không biết được là cái nào sẽ chạy trước -> mà may quá là cái useEffect của loginForm chạy trước -> Nên là nó không bị ảnh hưởng đến cái UI của giao diện
+
+- Nhưng mà để hạn chế trường hợp này chúng ta sẽ sử dụng `contextAPI` để mà sử dụng cái state từ contextAPI
+
+- Bây giờ thằng navItems nó có chạy trước hay chạy sau gì thì nó không quan trọng, mỗi lần mà thằng loginForm nó chạy xong thì nó sẽ set cái `isAuth` là false cho chúng ta

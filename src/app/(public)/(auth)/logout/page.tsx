@@ -4,9 +4,9 @@ import { toast } from '@/components/ui/use-toast'
 import { getAccessTokenFromLocalStorage, getRefreshTokenFromLocalStorage } from '@/lib/utils'
 import { useLogoutMutation } from '@/queries/useAuth'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useRef } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 
-const LogoutPage = () => {
+const LogoutLogic = () => {
   const { mutateAsync } = useLogoutMutation()
   const searchParams = useSearchParams()
 
@@ -46,7 +46,19 @@ const LogoutPage = () => {
       })
       .finally(() => {})
   }, [mutateAsync, router, refreshTokenFromUrl, accessTokenFromUrl])
-  return <div>Log out...</div>
+  return (
+    <Suspense>
+      <div>Log out...</div>
+    </Suspense>
+  )
+}
+
+const LogoutPage = () => {
+  return (
+    <Suspense>
+      <LogoutLogic />
+    </Suspense>
+  )
 }
 
 export default LogoutPage

@@ -1,3 +1,4 @@
+import { removeTokensFromLocalStorage } from '@/lib/utils'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
@@ -20,7 +21,10 @@ export function middleware(request: NextRequest) {
   // Ở đây phải check là ko có RT mới là chưa đăng nhập vì khi mà để AT thì khi mà AT nó hết hạn mà nó đá ng dùng về login thì không đúng lắm vì chúng ta chưa làm gia hạn AT
   // Và cái case cũng đúng cho trường hợp là khi mà RT hết hạn thì bắt buộc người dùng phải đăng nhập lại
   if (privatePaths.some((path) => pathname.startsWith(path)) && !refreshToken) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    const url = new URL('/login', request.url)
+    url.searchParams.set('clearTokens', 'true')
+    // const clearTokens = removeTokensFromLocalStorage()
+    return NextResponse.redirect(url)
   }
 
   // Đăng nhập rồi thì sẽ không cho vào login nữa

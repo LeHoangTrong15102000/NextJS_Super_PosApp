@@ -1,5 +1,6 @@
 'use client'
 
+import { useAppContext } from '@/components/app-provider'
 import { getAccessTokenFromLocalStorage, getRefreshTokenFromLocalStorage } from '@/lib/utils'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
@@ -37,8 +38,9 @@ const menuItems = [
 export default function NavItems({ className }: { className?: string }) {
   // Cho nó giống trên server vì server nó đâu có biết là đăng nhập hay chưa nên nó cho cái isAuth là false
   // const refreshTokenFromLocalStorage = getRefreshTokenFromLocalStorage()
-  const accessTokenFromLocalStorage = getAccessTokenFromLocalStorage()
-  const [isAuth, setIsAuth] = useState(false)
+  // const accessTokenFromLocalStorage = getAccessTokenFromLocalStorage()
+  // const [isAuth, setIsAuth] = useState(false)
+  const { isAuth } = useAppContext()
 
   // useEffect(() => {
   //   if (accessTokenFromLocalStorage) {
@@ -47,9 +49,9 @@ export default function NavItems({ className }: { className?: string }) {
   //   setIsAuth(false)
   // }, [accessTokenFromLocalStorage])
 
-  useEffect(() => {
-    setIsAuth(Boolean(accessTokenFromLocalStorage))
-  }, [])
+  // useEffect(() => {
+  //   setIsAuth(Boolean(accessTokenFromLocalStorage))
+  // }, [])
 
   return menuItems.map((item) => {
     if ((item.authRequired === false && isAuth) || (item.authRequired === true && !isAuth)) return null
