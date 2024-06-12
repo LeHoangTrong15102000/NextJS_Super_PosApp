@@ -259,4 +259,22 @@ Lưu ý để tránh bị bug khi thực hiện Đang dùng thì hết hạn
 
 - Khi mà người dùng lâu ngày không vào thì AT lúc này đã hết hạn và còn RT thì lúc này chúng ta sẽ chuyển ng dùng về trang `refresh-token` để mà `xác thực` lại cho người dùng, để ng dùng có thể thao tác lại được với trang web
 
-- Sau khi mà RT lại cho người dùng rồi thì chúng ta sẽ `redirect` lại cái `route` mà lúc đầu người dùng nhấn vào
+- Sau khi mà RT lại cho người dùng rồi thì chúng ta sẽ `redirect` lại cái `route` mà lúc đầu người dùng nhấn vào\
+
+### Xử lý RT hết hạn khi người dùng đang sử dụng trang web
+
+- Xử lý trường hợp mà RT khi mà người dùng đang sử dụng thì nó hết hạn
+
+- Sẽ xử lý nốt cái trường hợp này mà thôi
+
+- Khi mà AT và RT hết hạn mà người dùng vẫn còn đang sử dụng thì `middleware` nó sẽ check và đá người dùng về trang `login` luôn
+
+- Nên là khi mà F5 lại thì middleware nó sẽ check và `logout` người dùng và đá ng dùng về trang `Login`, đồng thời chúng ta cũng sẽ thực hiện việc xóa luôn cả `localStorage`
+
+- Chúng ta sẽ có một bug đó là chúng ta chỉ check cái `onError` ở hàm chạy lần đầu tiên mà thôi mà chúng ta không check ở trong cái `interval` -> bởi vì chính cái function này chúng ta truyền vào cái `setInterval`, nên là có lỗi gì thì chúng ta cũng cần phải clear nó đi
+
+- Ngoài việc xóa `localStorage` `clearInterval` khi mà RT hết hạn c thì chúng ta cũng sẽ redirect người dùng về trang `login`
+
+### Xử lý RT hết hạn khi người dùng lâu ngày không vào lại trang web
+
+- Trường hợp này thì khi mà ng lâu ngày mà vào trang thì lúc này cả AT và RT nó đều hết hạn cả

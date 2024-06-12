@@ -1,21 +1,15 @@
 'use client'
 
-import {
-  checkAndRefreshToken,
-  getAccessTokenFromLocalStorage,
-  getRefreshTokenFromLocalStorage,
-  setAccessTokenToLocalStorage,
-  setRefreshTokenToLocalStorage
-} from '@/lib/utils'
-import { usePathname } from 'next/navigation'
+import { toast } from '@/components/ui/use-toast'
+import { checkAndRefreshToken } from '@/lib/utils'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import jwt from 'jsonwebtoken'
-import authApiRequest from '@/apiRequests/auth'
 
 // Những page sau sẽ không refresh-token
 const UNAUTHENTICATED_PATH = ['/login', '/register', '/refresh-token']
 const RefreshToken = () => {
   const pathname = usePathname()
+  const router = useRouter()
 
   // useEffect để mà chúng ta check set cái Interval các kiểu
   useEffect(() => {
@@ -30,18 +24,34 @@ const RefreshToken = () => {
     checkAndRefreshToken({
       onError: () => {
         clearInterval(interval)
+        toast({
+          description: 'Hết phiên đăng nhập!!'
+        })
+        router.push('/login')
       }
     })
     const TIMEOUT = 1000
     // Vì sau khi mà effect function nó chạy thì cái callback của Interval sau TIMEOUT thì nó mới chạy
     // AT thời gian hết hạn là 10s thì sau 1s sẽ check 1 lần
-    interval = setInterval(checkAndRefreshToken, TIMEOUT)
+    interval = setInterval(
+      () =>
+        checkAndRefreshToken({
+          onError: () => {
+            clearInterval(interval)
+            toast({
+              description: 'Hết phiên đăng nhập!!'
+            })
+            router.push('/login')
+          }
+        }),
+      TIMEOUT
+    )
 
     // Xoá interval khi mà unmount, qua component khác thì gọi lại
     return () => {
       clearInterval(interval)
     }
-  }, [pathname])
+  }, [pathname, router])
   return null
 }
 
