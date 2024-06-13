@@ -1,9 +1,14 @@
-import { Home, LineChart, ShoppingCart, Users2, Salad, Table } from 'lucide-react'
+import { Home, LineChart, ShoppingCart, Users2, Salad, Table, LayoutDashboard } from 'lucide-react'
 
 const menuItems = [
   {
-    title: 'Dashboard',
+    title: 'Home',
     Icon: Home,
+    href: '/'
+  },
+  {
+    title: 'Dashboard',
+    Icon: LayoutDashboard,
     href: '/manage/dashboard'
   },
   {
