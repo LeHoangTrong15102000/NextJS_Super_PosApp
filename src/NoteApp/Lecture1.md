@@ -288,3 +288,15 @@ Lưu ý để tránh bị bug khi thực hiện Đang dùng thì hết hạn
 - Nhưng mà để hạn chế trường hợp này chúng ta sẽ sử dụng `contextAPI` để mà sử dụng cái state từ contextAPI
 
 - Bây giờ thằng navItems nó có chạy trước hay chạy sau gì thì nó không quan trọng, mỗi lần mà thằng loginForm nó chạy xong thì nó sẽ set cái `isAuth` là false cho chúng ta
+
+### Xử lý bug Avatar ở trang setting
+
+- Sẽ thực hiện việc xử lý cái bug này
+
+- Khi mà cái avatar chúng ta trống mà chúng ta không cập nhật cái avatar thì chúng ta sẽ không cập nhật được cái trường name ở trong đó luôn
+
+- Sẽ giải quyết cái bug này
+
+- Khi mà cái Avatar chúng ta không có thì lúc này nó sẽ lấy cái chuỗi rỗng và lúc này thì nó
+
+- Nên là chúng ta sẽ sửa nó lại là undefined để mà ban đầu ng dùng vào mà không có avatar thì giá trị sẽ là `undefined` phù hợp với validate của `Zod schema` là `stringURL` hoặc là `optional` -> Nên mà nếu để giá trị ban đầu là `string-rỗng` thì nó sẽ bị `zodSchema validate` là không phải là một `stringUrl`

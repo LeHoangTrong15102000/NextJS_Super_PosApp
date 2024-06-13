@@ -50,7 +50,7 @@ const LogoutLogic = () => {
       // Tránh trường hợp mà ng khác gửi cái đường link mà chúng ta cứ ở mãi cái trang này thì nó không hay
       router.push('/')
     }
-  }, [mutateAsync, router, refreshTokenFromUrl, accessTokenFromUrl])
+  }, [mutateAsync, router, refreshTokenFromUrl, accessTokenFromUrl, setIsAuth])
   return <div>Log out...</div>
 }
 
