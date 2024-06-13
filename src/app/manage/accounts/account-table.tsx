@@ -68,7 +68,7 @@ export const columns: ColumnDef<AccountType>[] = [
     header: 'Avatar',
     cell: ({ row }) => (
       <div>
-        <Avatar className='aspect-square w-[100px] h-[100px] rounded-md object-cover'>
+        <Avatar className='aspect-square h-[100px] w-[100px] rounded-md object-cover'>
           <AvatarImage src={row.getValue('avatar')} />
           <AvatarFallback className='rounded-none'>{row.original.name}</AvatarFallback>
         </Avatar>
@@ -144,7 +144,7 @@ function AlertDialogDeleteAccount({
         <AlertDialogHeader>
           <AlertDialogTitle>Xóa nhân viên?</AlertDialogTitle>
           <AlertDialogDescription>
-            Tài khoản <span className='bg-foreground text-primary-foreground rounded px-1'>{employeeDelete?.name}</span>{' '}
+            Tài khoản <span className='rounded bg-foreground px-1 text-primary-foreground'>{employeeDelete?.name}</span>{' '}
             sẽ bị xóa vĩnh viễn
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -205,7 +205,8 @@ const AccountTable = () => {
   }, [table, pageIndex])
 
   return (
-    <Suspense>
+    // <Suspense fallback={<div>Loading...</div>}>
+    // </Suspense>
       <AccountTableContext.Provider value={{ employeeIdEdit, setEmployeeIdEdit, employeeDelete, setEmployeeDelete }}>
         <div className='w-full'>
           <EditEmployee id={employeeIdEdit} setId={setEmployeeIdEdit} onSubmitSuccess={() => {}} />
@@ -258,12 +259,12 @@ const AccountTable = () => {
             </Table>
           </div>
           <div className='flex items-center justify-end space-x-2 py-4'>
-            <div className='text-xs text-muted-foreground py-4 flex-1 '>
+            <div className='flex-1 py-4 text-xs text-muted-foreground'>
               Hiển thị <strong>{table.getPaginationRowModel().rows.length}</strong> trong <strong>{data.length}</strong>{' '}
               kết quả
             </div>
             <div>
-              <Suspense>
+              <Suspense fallback={<div>Loading...</div>}>
                 <AutoPagination
                   page={table.getState().pagination.pageIndex + 1}
                   pageSize={table.getPageCount()}
@@ -274,7 +275,6 @@ const AccountTable = () => {
           </div>
         </div>
       </AccountTableContext.Provider>
-    </Suspense>
   )
 }
 

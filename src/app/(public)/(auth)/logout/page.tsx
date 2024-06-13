@@ -51,16 +51,12 @@ const LogoutLogic = () => {
       router.push('/')
     }
   }, [mutateAsync, router, refreshTokenFromUrl, accessTokenFromUrl])
-  return (
-    <Suspense>
-      <div>Log out...</div>
-    </Suspense>
-  )
+  return <div>Log out...</div>
 }
 
 const LogoutPage = () => {
   return (
-    <Suspense>
+    <Suspense fallback={<div>Loading...</div>}>
       <LogoutLogic />
     </Suspense>
   )

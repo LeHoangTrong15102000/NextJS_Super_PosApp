@@ -1,11 +1,13 @@
 import accountApiRequest from '@/apiRequests/account'
 import { toast } from '@/components/ui/use-toast'
+import { getAccessTokenFromLocalStorage } from '@/lib/utils'
 import { cookies } from 'next/headers'
 
 const Dashboard = async () => {
-  const cookieStore = cookies()
+  // const cookieStore = cookies()
   //  Hoặc là để dấu '!' ở phía cuối để mà nói với typescript răng thằng này chắc chắn sẽ không undefined
-  const accessToken = cookieStore.get('accessToken')?.value as string
+  // const accessToken = cookieStore.get('accessToken')?.value as string
+  const accessToken = getAccessTokenFromLocalStorage() as string
   let name = ''
 
   // Khi mà gọi đến sMeProfile thì cái Authorization ở http chính là cái AT ở cookie gửi lên

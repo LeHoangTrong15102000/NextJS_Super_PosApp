@@ -114,7 +114,7 @@ function LoginFormLogic() {
 
 const LoginForm = () => {
   return (
-    <Suspense>
+    <Suspense fallback={<div>Loading...</div>}>
       <LoginFormLogic />
     </Suspense>
   )

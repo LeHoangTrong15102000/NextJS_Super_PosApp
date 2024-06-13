@@ -1,9 +1,11 @@
 # NextJS Super PosApp Project
 
-## Quản lý người dùng
+## Chương 9 Quản lý tài khoản nhân viên
 
-## Quản lý món ăn
+- Thực hiện quản lý tài khoản của người dùng
 
-## Quản lý đơn hàng
+## Chương 10 Quản lý món ăn
 
-## Quản lý bàn ăn
+## Chương 11 Quản lý đơn hàng
+
+## Chương 12 Quản lý bàn ăn
