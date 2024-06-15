@@ -14,15 +14,22 @@ import { Label } from '@/components/ui/label'
 import { CreateEmployeeAccountBody, CreateEmployeeAccountBodyType } from '@/schemaValidations/account.schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { PlusCircle, Upload } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Form, FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useAddEmployeeMutation } from '@/queries/useAccount'
+import { toast } from '@/components/ui/use-toast'
+import { useUploadMediaMutation } from '@/queries/useMedia'
+import { handleErrorApi } from '@/lib/utils'
 
 const AddEmployee = () => {
   const [file, setFile] = useState<File | null>(null)
   const [open, setOpen] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement | null>(null)
+  const addEmployeeMutation = useAddEmployeeMutation()
+  const uploadMutation = useUploadMediaMutation()
+
   const form = useForm<CreateEmployeeAccountBodyType>({
     resolver: zodResolver(CreateEmployeeAccountBody),
     defaultValues: {
@@ -42,6 +49,44 @@ const AddEmployee = () => {
     return avatar
   }, [file, avatar])
 
+  const handleReset = () => {
+    form.reset()
+    setFile(null)
+  }
+
+  const handleSubmitForm = async (values: CreateEmployeeAccountBodyType) => {
+    if (addEmployeeMutation.isPending) return
+    try {
+      let bodySubmit = values
+      if (file) {
+        // Chúng ta chi dùng cái file này để mà chúng ta upload lên thôi
+        const formData = new FormData()
+        formData.append('file', file)
+        // CallAPi upload ảnh
+        const uploadImageResult = await uploadMutation.mutateAsync(formData)
+        const imageUrl = uploadImageResult.payload.data
+        // Nếu mà có file thì gán lại như này
+        bodySubmit = {
+          ...values,
+          avatar: imageUrl
+        }
+      }
+      const result = await addEmployeeMutation.mutateAsync(bodySubmit)
+      toast({
+        description: result.payload.message
+      })
+      form.reset()
+      setFile(null)
+      setOpen(false)
+      // router.refresh()
+    } catch (error) {
+      handleErrorApi({
+        error,
+        setError: form.setError
+      })
+    }
+  }
+
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
@@ -50,21 +95,29 @@ const AddEmployee = () => {
           <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>Tạo tài khoản</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className='sm:max-w-[600px] max-h-screen overflow-auto'>
+      <DialogContent className='max-h-screen overflow-auto sm:max-w-[600px]'>
         <DialogHeader>
           <DialogTitle>Tạo tài khoản</DialogTitle>
           <DialogDescription>Các trường tên, email, mật khẩu là bắt buộc</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form noValidate className='grid auto-rows-max items-start gap-4 md:gap-8' id='add-employee-form'>
+          <form
+            noValidate
+            className='grid auto-rows-max items-start gap-4 md:gap-8'
+            id='add-employee-form'
+            onSubmit={form.handleSubmit(handleSubmitForm, (error) => {
+              console.log('Checkk error onSubmit', error)
+            })}
+            onReset={handleReset}
+          >
             <div className='grid gap-4 py-4'>
               <FormField
                 control={form.control}
                 name='avatar'
                 render={({ field }) => (
                   <FormItem>
-                    <div className='flex gap-2 items-start justify-start'>
-                      <Avatar className='aspect-square w-[100px] h-[100px] rounded-md object-cover'>
+                    <div className='flex items-start justify-start gap-2'>
+                      <Avatar className='aspect-square h-[100px] w-[100px] rounded-md object-cover'>
                         <AvatarImage src={previewAvatarFromFile} />
                         <AvatarFallback className='rounded-none'>{name || 'Avatar'}</AvatarFallback>
                       </Avatar>
@@ -76,6 +129,7 @@ const AddEmployee = () => {
                           const file = e.target.files?.[0]
                           if (file) {
                             setFile(file)
+                            // Fake URL để mà nó vượt qua được cái validation zod
                             field.onChange('http://localhost:3000/' + file.name)
                           }
                         }}

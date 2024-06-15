@@ -31,7 +31,7 @@ export const useChangePasswordMutation = () => {
   })
 }
 
-// Get list account
+// Get list Employee account
 export const useGetListAccountQuery = () => {
   return useQuery({
     queryKey: ['account-list'],
@@ -39,7 +39,7 @@ export const useGetListAccountQuery = () => {
   })
 }
 
-// Get detail employee
+// Get detail employee accountn
 export const useGetEmployeeQuery = ({ employeeId }: { employeeId: number }) => {
   //  Truyền vào trong queryKey là employeeId để mà react-query nó biết được là nó sẽ gọi tới thằng nào
   // Để khi mà employeeId thay đổi thì nó sẽ chạy lại cái queryFn

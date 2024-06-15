@@ -22,7 +22,7 @@ const accountApiRequest = {
   changePassword: (body: ChangePasswordBodyType) => http.put<AccountResType>(`${PREFIX}/change-password`, body),
   getListAccount: () => http.get<AccountListResType>(PREFIX),
   getEmployeeDetail: (employeeId: number) => http.get<AccountResType>(`${PREFIX}/detail/${employeeId}`),
-  addEmployee: (body: CreateEmployeeAccountBodyType) => http.post<AccountResType>(PREFIX, body),
+  addEmployee: (body: CreateEmployeeAccountBodyType) => http.post<AccountResType>(`${PREFIX}`, body),
   updateEmployee: (employeeId: number, body: UpdateEmployeeAccountBodyType) =>
     http.put<AccountResType>(`${PREFIX}/detail/${employeeId}`, body),
   deleteEmployee: (employeeId: number) => http.delete<AccountResType>(`${PREFIX}/detail/${employeeId}`)
