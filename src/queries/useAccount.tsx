@@ -40,12 +40,14 @@ export const useGetListAccountQuery = () => {
 }
 
 // Get detail employee accountn
-export const useGetEmployeeQuery = ({ id }: { id: number }) => {
+export const useGetEmployeeQuery = ({ id, enabled }: { id: number; enabled: boolean }) => {
   //  Truyền vào trong queryKey là id để mà react-query nó biết được là nó sẽ gọi tới thằng nào
   // Để khi mà id thay đổi thì nó sẽ chạy lại cái queryFn
   return useQuery({
     queryKey: ['employee-account', id],
-    queryFn: () => accountApiRequest.getEmployeeDetail(id)
+    queryFn: () => accountApiRequest.getEmployeeDetail(id),
+    // Khi mà enabled là true thì nó sẽ gọi API còn false thì nó sẽ không gọi
+    enabled
   })
 }
 
@@ -64,8 +66,8 @@ export const useAddEmployeeMutation = () => {
 export const useUpdateEmployeeMutation = () => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ employeeId, body }: { employeeId: number; body: UpdateEmployeeAccountBodyType }) =>
-      accountApiRequest.updateEmployee(employeeId, body),
+    mutationFn: ({ id, ...body }: UpdateEmployeeAccountBodyType & { id: number }) =>
+      accountApiRequest.updateEmployee(id, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['account-list'] })
     }

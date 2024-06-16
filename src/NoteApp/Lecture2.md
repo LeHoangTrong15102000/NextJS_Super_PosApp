@@ -16,6 +16,8 @@
 
 - Call API `getDetailEmployee` để mà lấy ra cái thông tin cụ thể của thằng employee đó
 
+- Khi mà có trường changePassword truyền lên thì chúng ta mới có thể thay đổi mật khẩu được
+
 ## Chương 10 Quản lý món ăn
 
 - Quản lý món ăn
