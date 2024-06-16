@@ -18,6 +18,7 @@ import { useForm } from 'react-hook-form'
 import { Form, FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Switch } from '@/components/ui/switch'
+import { useGetEmployeeQuery } from '@/queries/useAccount'
 
 const EditEmployee = ({
   id,
@@ -30,6 +31,9 @@ const EditEmployee = ({
 }) => {
   const [file, setFile] = useState<File | null>(null)
   const avatarInputRef = useRef<HTMLInputElement | null>(null)
+
+  // Query get detail employee
+  const { data: employeeInfoDetail } = useGetEmployeeQuery({ id: id as number })
   const form = useForm<UpdateEmployeeAccountBodyType>({
     resolver: zodResolver(UpdateEmployeeAccountBody),
     defaultValues: {
@@ -60,7 +64,7 @@ const EditEmployee = ({
         }
       }}
     >
-      <DialogContent className='sm:max-w-[600px] max-h-screen overflow-auto'>
+      <DialogContent className='max-h-screen overflow-auto sm:max-w-[600px]'>
         <DialogHeader>
           <DialogTitle>Cập nhật tài khoản</DialogTitle>
           <DialogDescription>Các trường tên, email, mật khẩu là bắt buộc</DialogDescription>
@@ -73,8 +77,8 @@ const EditEmployee = ({
                 name='avatar'
                 render={({ field }) => (
                   <FormItem>
-                    <div className='flex gap-2 items-start justify-start'>
-                      <Avatar className='aspect-square w-[100px] h-[100px] rounded-md object-cover'>
+                    <div className='flex items-start justify-start gap-2'>
+                      <Avatar className='aspect-square h-[100px] w-[100px] rounded-md object-cover'>
                         <AvatarImage src={previewAvatarFromFile} />
                         <AvatarFallback className='rounded-none'>{name || 'Avatar'}</AvatarFallback>
                       </Avatar>

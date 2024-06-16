@@ -40,12 +40,12 @@ export const useGetListAccountQuery = () => {
 }
 
 // Get detail employee accountn
-export const useGetEmployeeQuery = ({ employeeId }: { employeeId: number }) => {
-  //  Truyền vào trong queryKey là employeeId để mà react-query nó biết được là nó sẽ gọi tới thằng nào
-  // Để khi mà employeeId thay đổi thì nó sẽ chạy lại cái queryFn
+export const useGetEmployeeQuery = ({ id }: { id: number }) => {
+  //  Truyền vào trong queryKey là id để mà react-query nó biết được là nó sẽ gọi tới thằng nào
+  // Để khi mà id thay đổi thì nó sẽ chạy lại cái queryFn
   return useQuery({
-    queryKey: ['employee-account', employeeId],
-    queryFn: () => accountApiRequest.getEmployeeDetail(employeeId)
+    queryKey: ['employee-account', id],
+    queryFn: () => accountApiRequest.getEmployeeDetail(id)
   })
 }
 

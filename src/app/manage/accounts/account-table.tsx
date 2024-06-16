@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { useSearchParams } from 'next/navigation'
 import AutoPagination from '@/components/auto-pagination'
+import { useGetListAccountQuery } from '@/queries/useAccount'
 
 type AccountItem = AccountListResType['data'][0]
 
@@ -59,6 +60,13 @@ const AccountTableContext = createContext<{
 })
 
 export const columns: ColumnDef<AccountType>[] = [
+  {
+    id: 'stt',
+    header: 'STT',
+    cell: ({ row }) => {
+      return <div>{row.index + 1}</div>
+    }
+  },
   {
     accessorKey: 'id',
     header: 'ID'
@@ -89,8 +97,8 @@ export const columns: ColumnDef<AccountType>[] = [
           <CaretSortIcon className='ml-2 h-4 w-4' />
         </Button>
       )
-    },
-    cell: ({ row }) => <div className='lowercase'>{row.getValue('email')}</div>
+    }
+    // cell: ({ row }) => <div className='lowercase'>{row.getValue('email')}</div>
   },
   {
     id: 'actions',
@@ -124,6 +132,7 @@ export const columns: ColumnDef<AccountType>[] = [
   }
 ]
 
+// Component hiển thị khung alert để confirm là muốn xoá employee hay không
 function AlertDialogDeleteAccount({
   employeeDelete,
   setEmployeeDelete
@@ -163,9 +172,9 @@ const AccountTable = () => {
   const page = searchParam.get('page') ? Number(searchParam.get('page')) : 1
   const pageIndex = page - 1
   // const params = Object.fromEntries(searchParam.entries())
+  //  State cho Edit Actions, Delete Actions
   const [employeeIdEdit, setEmployeeIdEdit] = useState<number | undefined>()
   const [employeeDelete, setEmployeeDelete] = useState<AccountItem | null>(null)
-  const data: any[] = []
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -174,6 +183,13 @@ const AccountTable = () => {
     pageIndex, // Gía trị mặc định ban đầu, không có ý nghĩa khi data được fetch bất đồng bộ
     pageSize: PAGE_SIZE //default page size
   })
+
+  // Get List employee query
+  const { data: accountListQuery } = useGetListAccountQuery()
+  console.log('Checkk account list', accountListQuery)
+
+  // Data table
+  const data: AccountItem[] = accountListQuery?.payload?.data ?? []
 
   const table = useReactTable({
     data,
@@ -197,6 +213,7 @@ const AccountTable = () => {
     }
   })
 
+  // Sau khi cái pageIndex thay đổi thì bảo với thằng table là chuyển trang
   useEffect(() => {
     table.setPagination({
       pageIndex,
@@ -207,74 +224,72 @@ const AccountTable = () => {
   return (
     // <Suspense fallback={<div>Loading...</div>}>
     // </Suspense>
-      <AccountTableContext.Provider value={{ employeeIdEdit, setEmployeeIdEdit, employeeDelete, setEmployeeDelete }}>
-        <div className='w-full'>
-          <EditEmployee id={employeeIdEdit} setId={setEmployeeIdEdit} onSubmitSuccess={() => {}} />
-          <AlertDialogDeleteAccount employeeDelete={employeeDelete} setEmployeeDelete={setEmployeeDelete} />
-          <div className='flex items-center py-4'>
-            <Input
-              placeholder='Filter emails...'
-              value={(table.getColumn('email')?.getFilterValue() as string) ?? ''}
-              onChange={(event) => table.getColumn('email')?.setFilterValue(event.target.value)}
-              className='max-w-sm'
-            />
-            <div className='ml-auto flex items-center gap-2'>
-              <AddEmployee />
-            </div>
-          </div>
-          <div className='rounded-md border'>
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </TableHead>
-                      )
-                    })}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className='h-24 text-center'>
-                      No results.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          <div className='flex items-center justify-end space-x-2 py-4'>
-            <div className='flex-1 py-4 text-xs text-muted-foreground'>
-              Hiển thị <strong>{table.getPaginationRowModel().rows.length}</strong> trong <strong>{data.length}</strong>{' '}
-              kết quả
-            </div>
-            <div>
-              <Suspense fallback={<div>Loading...</div>}>
-                <AutoPagination
-                  page={table.getState().pagination.pageIndex + 1}
-                  pageSize={table.getPageCount()}
-                  pathname='/manage/accounts'
-                />
-              </Suspense>
-            </div>
+    <AccountTableContext.Provider value={{ employeeIdEdit, setEmployeeIdEdit, employeeDelete, setEmployeeDelete }}>
+      <div className='w-full'>
+        <EditEmployee id={employeeIdEdit} setId={setEmployeeIdEdit} onSubmitSuccess={() => {}} />
+        <AlertDialogDeleteAccount employeeDelete={employeeDelete} setEmployeeDelete={setEmployeeDelete} />
+        <div className='flex items-center py-4'>
+          <Input
+            placeholder='Filter emails...'
+            value={(table.getColumn('email')?.getFilterValue() as string) ?? ''}
+            onChange={(event) => table.getColumn('email')?.setFilterValue(event.target.value)}
+            className='max-w-sm'
+          />
+          <div className='ml-auto flex items-center gap-2'>
+            <AddEmployee />
           </div>
         </div>
-      </AccountTableContext.Provider>
+        <div className='rounded-md border'>
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    )
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className='h-24 text-center'>
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        <div className='flex items-center justify-end space-x-2 py-4'>
+          <div className='flex-1 py-4 text-xs text-muted-foreground'>
+            Hiển thị <strong>{table.getPaginationRowModel().rows.length}</strong> trong <strong>{data.length}</strong>{' '}
+            kết quả
+          </div>
+          <div>
+            <Suspense fallback={<div>Loading...</div>}>
+              <AutoPagination
+                page={table.getState().pagination.pageIndex + 1}
+                pageSize={table.getPageCount()}
+                pathname='/manage/accounts'
+              />
+            </Suspense>
+          </div>
+        </div>
+      </div>
+    </AccountTableContext.Provider>
   )
 }
 

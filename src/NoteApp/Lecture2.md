@@ -6,6 +6,16 @@
 
 - Những trang như này thì không cần phải SEO làm gì, vì con bot Google nó cũng đâu có thấy được đâu, những trang chúng ta public ra ngoài thì chúng ta hãy nên fetch API ở server, còn lại cứ fetch ở client, vì khi callAPI ở `server` chúng ta sẽ làm cho nó phức tạp hơn
 
+### Hiển thị danh sách account employee list
+
+- Show danh sách tài khoản lên trên cái table
+
+### Edit account employee detail
+
+- Thực hiện việc edit employee account trong listAccount Employee
+
+- Call API `getDetailEmployee` để mà lấy ra cái thông tin cụ thể của thằng employee đó
+
 ## Chương 10 Quản lý món ăn
 
 - Quản lý món ăn
