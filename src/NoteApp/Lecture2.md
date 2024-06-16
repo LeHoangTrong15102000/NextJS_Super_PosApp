@@ -16,7 +16,16 @@
 
 - Call API `getDetailEmployee` để mà lấy ra cái thông tin cụ thể của thằng employee đó
 
-- Khi mà có trường changePassword truyền lên thì chúng ta mới có thể thay đổi mật khẩu được
+- Khi mà có trường changePassword truyền lên thì chúng ta mới có thể thay đổi mật
+  khẩu được
+
+### Fix bug avatar không load lại khi mà editAccount
+
+- Fix bug cái vấn đề đó
+
+- thì khi mà cập nhật cái ảnh cảu cái tài khoản mà chúng ta lưu thì khi mà quá sửa cái tài khoản của người khác thì nó lại hiển thị ảnh của tài khoảm lúc trước -> Lý do đó chính là cái previewImage nó đang dựa vào cái `file - state` và `avatar - infoUser`
+
+- Thì khi mà chúng ta upload cai file rồi thì cái file của chúng ta nó sẽ có trạng thái -> Nên là khi mà `infoUser` của employee khác thì nó sẽ vẫn hiển thị cái file của ng đó do là cái state `file` vẫn còn trạng thái -> Nên là khi mà chúng ta cập nhật xong thì chúng ta cần tắt cái trạng thái đó đi
 
 ## Chương 10 Quản lý món ăn
 

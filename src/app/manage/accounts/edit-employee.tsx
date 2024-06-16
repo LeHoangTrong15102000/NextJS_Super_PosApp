@@ -36,6 +36,7 @@ const EditEmployee = ({
   const avatarInputRef = useRef<HTMLInputElement | null>(null)
 
   // Query get detail employee
+  // Thì có id truyền vào thì chúng ta mới callAPI getDetailEmployee
   const { data } = useGetEmployeeQuery({ id: id as number, enabled: Boolean(id) })
   const uploadMutation = useUploadMediaMutation()
   const updateEmployeeMutation = useUpdateEmployeeMutation()
@@ -89,14 +90,17 @@ const EditEmployee = ({
         const imageUrl = uploadImageResult.payload.data
         // Nếu mà có file thì gán lại như này
         body = {
-          avatar: imageUrl,
-          ...body
+          ...body,
+          avatar: imageUrl
         }
       }
       const result = await updateEmployeeMutation.mutateAsync(body)
+      console.log(result)
       toast({
         description: result.payload.message
       })
+      setFile(null)
+      setId(undefined)
       onSubmitSuccess && onSubmitSuccess()
       // setOpen(false)
       // router.refresh()
@@ -108,12 +112,19 @@ const EditEmployee = ({
     }
   }
 
+  const reset = () => {
+    setFile(null)
+    setId(undefined)
+  }
+
   return (
     <Dialog
       open={Boolean(id)}
       onOpenChange={(value) => {
         if (!value) {
-          setId(undefined)
+          // Nếu như trong cái dialog không có value thì reset() lại
+          // Khi mà nhấn vào nút X dialog thì cái function sẽ chạy
+          reset()
         }
       }}
     >

@@ -43,7 +43,9 @@ import {
 } from '@/components/ui/alert-dialog'
 import { useSearchParams } from 'next/navigation'
 import AutoPagination from '@/components/auto-pagination'
-import { useGetListAccountQuery } from '@/queries/useAccount'
+import { useDeleteEmployeeMutation, useGetListAccountQuery } from '@/queries/useAccount'
+import { toast } from '@/components/ui/use-toast'
+import { handleErrorApi } from '@/lib/utils'
 
 type AccountItem = AccountListResType['data'][0]
 
@@ -109,6 +111,7 @@ export const columns: ColumnDef<AccountType>[] = [
         setEmployeeIdEdit(row.original.id)
       }
 
+      // Set vào cai item=original để khi mà nhấn vào nút xóa thì chúng ta sẽ lấy ra được cái name để mà xóa đi
       const openDeleteEmployee = () => {
         setEmployeeDelete(row.original)
       }
@@ -140,11 +143,30 @@ function AlertDialogDeleteAccount({
   employeeDelete: AccountItem | null
   setEmployeeDelete: (value: AccountItem | null) => void
 }) {
+  // Delete Account Employee
+  const deleteEmployeeMutation = useDeleteEmployeeMutation()
+  const deleteEmployee = async () => {
+    // employeeDelete là một cái object được save lại khi nhấn vào nút xóa
+    if (employeeDelete) {
+      try {
+        const result = await deleteEmployeeMutation.mutateAsync(employeeDelete.id)
+        toast({
+          description: result.payload.message
+        })
+        // Set lại là null cho nó tắt cái dialog đi
+        setEmployeeDelete(null)
+      } catch (error) {
+        handleErrorApi({ error })
+      }
+    }
+  }
+
   return (
     <AlertDialog
       open={Boolean(employeeDelete)}
       onOpenChange={(value) => {
         if (!value) {
+          // Khi mà set lại thành null thì cái dialogDelete nó sẽ được đóng lại
           setEmployeeDelete(null)
         }
       }}
@@ -159,7 +181,7 @@ function AlertDialogDeleteAccount({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction>Continue</AlertDialogAction>
+          <AlertDialogAction onClick={deleteEmployee}>Continue</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -186,7 +208,6 @@ const AccountTable = () => {
 
   // Get List employee query
   const { data: accountListQuery } = useGetListAccountQuery()
-  console.log('Checkk account list', accountListQuery)
 
   // Data table
   const data: AccountItem[] = accountListQuery?.payload?.data ?? []
