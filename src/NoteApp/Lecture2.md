@@ -31,6 +31,10 @@
 
 - Quản lý món ăn
 
+### Khai báo API cho món ăn
+
+- Nếuu mà chúng ta không truyền status lên thì mặc định khi mà callAPI thì nó sẽ trả về là `Available`
+
 ## Chương 11 Quản lý đơn hàng
 
 - Quản lý đơn hàng
