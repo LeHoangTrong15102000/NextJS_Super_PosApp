@@ -117,7 +117,7 @@ export const formatCurrency = (number: number) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(number)
 }
 
-// {}[A | B | C] => 'A' | 'B' | 'C'
+// {}['A' | 'B' | 'C'] => {}['A'] | {}['B'] | {}['C'] -> 'A' | 'B' | 'C'
 // Thì thằng status nó sẽ là một trong ba giá trị đó
 export const getVietnameseDishStatus = (status: (typeof DishStatus)[keyof typeof DishStatus]) => {
   switch (status) {
