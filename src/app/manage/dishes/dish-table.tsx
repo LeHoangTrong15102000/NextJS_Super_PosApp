@@ -37,14 +37,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog'
-import { formatCurrency, getVietnameseDishStatus } from '@/lib/utils'
+import { formatCurrency, getVietnameseDishStatus, handleErrorApi } from '@/lib/utils'
 import { useSearchParams } from 'next/navigation'
 import AutoPagination from '@/components/auto-pagination'
 import { DishListResType } from '@/schemaValidations/dish.schema'
 import EditDish from '@/app/manage/dishes/edit-dish'
 import AddDish from '@/app/manage/dishes/add-dish'
 import DOMPurify from 'dompurify'
-import { useDishListQuery } from '@/queries/useDish'
+import { useDeleteDishMutation, useDishListQuery } from '@/queries/useDish'
+import { toast } from '@/components/ui/use-toast'
 
 type DishItem = DishListResType['data'][0]
 
@@ -147,6 +148,23 @@ function AlertDialogDeleteDish({
   dishDelete: DishItem | null
   setDishDelete: (value: DishItem | null) => void
 }) {
+  const deleteDishMutation = useDeleteDishMutation()
+  const deleteDish = async () => {
+    if (dishDelete) {
+      try {
+        const result = await deleteDishMutation.mutateAsync(dishDelete.id)
+        // set dishDelete lại là nó null cho nó reset lại cái giá trị này, để mỗi lần mà delete thằng khác thì nó sẽ lấy giá trị mới
+        setDishDelete(null)
+        toast({
+          title: result.payload.message
+        })
+      } catch (error) {
+        handleErrorApi({
+          error
+        })
+      }
+    }
+  }
   return (
     <AlertDialog
       open={Boolean(dishDelete)}
@@ -166,7 +184,7 @@ function AlertDialogDeleteDish({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction>Continue</AlertDialogAction>
+          <AlertDialogAction onClick={deleteDish}>Continue</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

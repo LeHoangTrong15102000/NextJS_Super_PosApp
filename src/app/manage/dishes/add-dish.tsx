@@ -76,9 +76,11 @@ const AddDish = () => {
       })
     }
   }
+
   return (
     <Dialog
       onOpenChange={(value) => {
+        console.log('Checkk value', value)
         if (!value) {
           reset()
         }
