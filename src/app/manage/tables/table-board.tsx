@@ -25,7 +25,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { createContext, useContext, useEffect, useState } from 'react'
 import {
   AlertDialog,
@@ -37,88 +36,59 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog'
-import { formatCurrency, getVietnameseDishStatus, handleErrorApi } from '@/lib/utils'
+import { getVietnameseTableStatus } from '@/lib/utils'
 import { useSearchParams } from 'next/navigation'
 import AutoPagination from '@/components/auto-pagination'
-import { DishListResType } from '@/schemaValidations/dish.schema'
-import EditDish from '@/app/manage/dishes/edit-dish'
-import AddDish from '@/app/manage/dishes/add-dish'
-import DOMPurify from 'dompurify'
-import { useDeleteDishMutation, useDishListQuery } from '@/queries/useDish'
-import { toast } from '@/components/ui/use-toast'
+import { TableListResType } from '@/schemaValidations/table.schema'
+import EditTable from '@/app/manage/tables/edit-table'
+import AddTable from '@/app/manage/tables/add-table'
 
-type DishItem = DishListResType['data'][0]
+type TableItem = TableListResType['data'][0]
 
-const DishTableContext = createContext<{
-  setDishIdEdit: (value: number) => void
-  dishIdEdit: number | undefined
-  dishDelete: DishItem | null
-  setDishDelete: (value: DishItem | null) => void
+const TableBoardContext = createContext<{
+  setTableIdEdit: (value: number) => void
+  tableIdEdit: number | undefined
+  tableDelete: TableItem | null
+  setTableDelete: (value: TableItem | null) => void
 }>({
-  setDishIdEdit: (value: number | undefined) => {},
-  dishIdEdit: undefined,
-  dishDelete: null,
-  setDishDelete: (value: DishItem | null) => {}
+  setTableIdEdit: (value: number | undefined) => {},
+  tableIdEdit: undefined,
+  tableDelete: null,
+  setTableDelete: (value: TableItem | null) => {}
 })
 
-export const columns: ColumnDef<DishItem>[] = [
+export const columns: ColumnDef<TableItem>[] = [
   {
-    accessorKey: 'id',
-    header: 'ID'
+    accessorKey: 'number',
+    header: 'Số bàn',
+    cell: ({ row }) => <div className='capitalize'>{row.getValue('number')}</div>
   },
   {
-    accessorKey: 'image',
-    header: 'Ảnh',
-    cell: ({ row }) => (
-      <div>
-        <Avatar className='aspect-square h-[100px] w-[100px] rounded-md object-cover'>
-          <AvatarImage src={row.getValue('image')} />
-          <AvatarFallback className='rounded-none'>{row.original.name}</AvatarFallback>
-        </Avatar>
-      </div>
-    )
-  },
-  {
-    accessorKey: 'name',
-    header: 'Tên',
-    cell: ({ row }) => <div className='capitalize'>{row.getValue('name')}</div>
-  },
-  {
-    accessorKey: 'price',
-    header: 'Giá cả',
-    cell: ({ row }) => <div className='capitalize'>{formatCurrency(row.getValue('price'))}</div>
-  },
-  {
-    accessorKey: 'description',
-    header: 'Mô tả',
-    cell: ({ row }) => (
-      <div
-        dangerouslySetInnerHTML={{
-          __html: DOMPurify.sanitize(row.getValue('description'))
-        }}
-        className='whitespace-pre-line'
-      />
-    )
+    accessorKey: 'capacity',
+    header: 'Sức chứa',
+    cell: ({ row }) => <div className='capitalize'>{row.getValue('capacity')}</div>
   },
   {
     accessorKey: 'status',
     header: 'Trạng thái',
-    cell: ({ row }) => {
-      // Lấy ra cái value cúa status trong món ăn
-      ;<div>{getVietnameseDishStatus(row.getValue('status'))}</div>
-    }
+    cell: ({ row }) => <div>{getVietnameseTableStatus(row.getValue('status'))}</div>
+  },
+  {
+    accessorKey: 'token',
+    header: 'QR Code',
+    cell: ({ row }) => <div>{row.getValue('number')}</div>
   },
   {
     id: 'actions',
     enableHiding: false,
     cell: function Actions({ row }) {
-      const { setDishIdEdit, setDishDelete } = useContext(DishTableContext)
-      const openEditDish = () => {
-        setDishIdEdit(row.original.id)
+      const { setTableIdEdit, setTableDelete } = useContext(TableBoardContext)
+      const openEditTable = () => {
+        setTableIdEdit(row.original.number)
       }
 
-      const openDeleteDish = () => {
-        setDishDelete(row.original)
+      const openDeleteTable = () => {
+        setTableDelete(row.original)
       }
       return (
         <DropdownMenu>
@@ -131,8 +101,8 @@ export const columns: ColumnDef<DishItem>[] = [
           <DropdownMenuContent align='end'>
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={openEditDish}>Sửa</DropdownMenuItem>
-            <DropdownMenuItem onClick={openDeleteDish}>Xóa</DropdownMenuItem>
+            <DropdownMenuItem onClick={openEditTable}>Sửa</DropdownMenuItem>
+            <DropdownMenuItem onClick={openDeleteTable}>Xóa</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )
@@ -140,51 +110,33 @@ export const columns: ColumnDef<DishItem>[] = [
   }
 ]
 
-// Dialog Delete Dish
-function AlertDialogDeleteDish({
-  dishDelete,
-  setDishDelete
+function AlertDialogDeleteTable({
+  tableDelete,
+  setTableDelete
 }: {
-  dishDelete: DishItem | null
-  setDishDelete: (value: DishItem | null) => void
+  tableDelete: TableItem | null
+  setTableDelete: (value: TableItem | null) => void
 }) {
-  const deleteDishMutation = useDeleteDishMutation()
-  const deleteDish = async () => {
-    if (dishDelete) {
-      try {
-        const result = await deleteDishMutation.mutateAsync(dishDelete.id)
-        // set dishDelete lại là nó null cho nó reset lại cái giá trị này, để mỗi lần mà delete thằng khác thì nó sẽ lấy giá trị mới
-        setDishDelete(null)
-        toast({
-          title: result.payload.message
-        })
-      } catch (error) {
-        handleErrorApi({
-          error
-        })
-      }
-    }
-  }
   return (
     <AlertDialog
-      open={Boolean(dishDelete)}
+      open={Boolean(tableDelete)}
       onOpenChange={(value) => {
         if (!value) {
-          setDishDelete(null)
+          setTableDelete(null)
         }
       }}
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Xóa món ăn?</AlertDialogTitle>
+          <AlertDialogTitle>Xóa bàn ăn?</AlertDialogTitle>
           <AlertDialogDescription>
-            Món <span className='rounded bg-foreground px-1 text-primary-foreground'>{dishDelete?.name}</span> sẽ bị xóa
-            vĩnh viễn
+            Bàn <span className='rounded bg-foreground px-1 text-primary-foreground'>{tableDelete?.number}</span> sẽ bị
+            xóa vĩnh viễn
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={deleteDish}>Continue</AlertDialogAction>
+          <AlertDialogAction>Continue</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -192,18 +144,14 @@ function AlertDialogDeleteDish({
 }
 // Số lượng item trên 1 trang
 const PAGE_SIZE = 10
-
-const DishTable = () => {
+const TableBoard = () => {
   const searchParam = useSearchParams()
   const page = searchParam.get('page') ? Number(searchParam.get('page')) : 1
   const pageIndex = page - 1
-  const [dishIdEdit, setDishIdEdit] = useState<number | undefined>()
-  const [dishDelete, setDishDelete] = useState<DishItem | null>(null)
-
-  // Query Dishes
-  const dishListQuery = useDishListQuery()
-  const data = dishListQuery.data?.payload.data ?? []
-
+  // const params = Object.fromEntries(searchParam.entries())
+  const [tableIdEdit, setTableIdEdit] = useState<number | undefined>()
+  const [tableDelete, setTableDelete] = useState<TableItem | null>(null)
+  const data: any[] = []
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -243,20 +191,19 @@ const DishTable = () => {
   }, [table, pageIndex])
 
   return (
-    <DishTableContext.Provider value={{ dishIdEdit, setDishIdEdit, dishDelete, setDishDelete }}>
+    <TableBoardContext.Provider value={{ tableIdEdit, setTableIdEdit, tableDelete, setTableDelete }}>
       <div className='w-full'>
-        <EditDish id={dishIdEdit} setId={setDishIdEdit} />
-        <AlertDialogDeleteDish dishDelete={dishDelete} setDishDelete={setDishDelete} />
+        <EditTable id={tableIdEdit} setId={setTableIdEdit} />
+        <AlertDialogDeleteTable tableDelete={tableDelete} setTableDelete={setTableDelete} />
         <div className='flex items-center py-4'>
           <Input
-            placeholder='Lọc tên'
-            // Search theo tên của value trong ô input
-            value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-            onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
+            placeholder='Lọc số bàn'
+            value={(table.getColumn('number')?.getFilterValue() as string) ?? ''}
+            onChange={(event) => table.getColumn('number')?.setFilterValue(event.target.value)}
             className='max-w-sm'
           />
           <div className='ml-auto flex items-center gap-2'>
-            <AddDish />
+            <AddTable />
           </div>
         </div>
         <div className='rounded-md border'>
@@ -302,13 +249,13 @@ const DishTable = () => {
             <AutoPagination
               page={table.getState().pagination.pageIndex + 1}
               pageSize={table.getPageCount()}
-              pathname='/manage/dishes'
+              pathname='/manage/tables'
             />
           </div>
         </div>
       </div>
-    </DishTableContext.Provider>
+    </TableBoardContext.Provider>
   )
 }
 
-export default DishTable
+export default TableBoard
