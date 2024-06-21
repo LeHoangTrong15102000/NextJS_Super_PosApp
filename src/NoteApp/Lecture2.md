@@ -35,10 +35,10 @@
 
 - Nếuu mà chúng ta không truyền status lên thì mặc định khi mà callAPI thì nó sẽ trả về là `Available`
 
-## Chương 11 Quản lý đơn hàng
-
-- Quản lý đơn hàng
-
-## Chương 12 Quản lý bàn ăn
+## Chương 11 Quản lý bàn ăn
 
 - Quản lý bàn ăn
+
+## Chương 12 Quản lý đơn hàng
+
+- Quản lý đơn hàng
