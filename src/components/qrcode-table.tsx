@@ -14,8 +14,13 @@ export const QRCodeTable = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
-    const qrCanvas = document.createElement('canvas')
+    // Hiện tại: Thư viện QRCode nó sẽ vẽ lên cái thẻ Canvas
+    // Bây giờ: Chúng ta sẽ tạo 1 cái thẻ canvas ảo để thư viện QRCode code nó vẽ QR lên trên đó.
+    // Và chúng ta sẽ edit thẻ canvas thật
+    // Cuối cùng thì chúng ta sẽ đưa cái thẻ canvas ảo chứa QR Code ở trên vào thẻ Canvas thật
     // const canvas = canvasRef.current!
+
+    // để như vậy để typescript biết là thằng đó không thể là null
     const canvas = canvasRef.current!
     canvas.height = width + 70
     canvas.width = width
@@ -29,8 +34,11 @@ export const QRCodeTable = ({
     canvasContext.fillStyle = '#000'
     canvasContext.fillText(`Bàn số ${tableNumber}`, width / 2, width + 20)
     canvasContext.fillText('Quét mã QR để gọi món', width / 2, width + 50)
+
+    const virtalCanvas = document.createElement('canvas')
+
     QRCode.toCanvas(
-      qrCanvas,
+      virtalCanvas,
       getTableLink({
         token,
         tableNumber
@@ -41,7 +49,7 @@ export const QRCodeTable = ({
       },
       function (error) {
         if (error) console.error(error)
-        canvasContext.drawImage(qrCanvas, 0, 0, width, width)
+        canvasContext.drawImage(virtalCanvas, 0, 0, width, width)
       }
     )
   }, [token, tableNumber, width])

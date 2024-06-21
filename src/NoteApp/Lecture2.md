@@ -39,6 +39,22 @@
 
 - Quản lý bàn ăn
 
+- QR code sẽ chưa cái token
+
+- Mỗi cái token mà kết hợp vói số bàn thì nó sẽ tạo ra `QR code`
+
+- Nên là chúng ta sẽ lưu cái token tạo ra cái QR code vào `database`, chứ không phải là lưu cái hình vào trong `database`
+
+- Khi mà sửa cái QR code thì sẽ được đổi `token` thành cái `QR code` khác
+
+### Hiển thị danh sách bàn ăn và mã QR code
+
+### Thêm thông tin vào QR code Canvas
+
+### Update bàn ăn
+
+### Delete bàn ăn
+
 ## Chương 12 Quản lý đơn hàng
 
 - Quản lý đơn hàng
