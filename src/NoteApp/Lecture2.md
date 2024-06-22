@@ -49,6 +49,12 @@
 
 ### Hiển thị danh sách bàn ăn và mã QR code
 
+- Từ cái đường link token thì chúng ta sẽ tạo ra được cái mã `qr code`
+
+- Chỉ khi nào chúng ta nhấn nút changeToken và nhấn nút lưu thì nó mới thay đổi token đi
+
+- Thì cái table của thằng tanstack query thì nó sẽ có một cái là `filterFn` thì thằng này nó sẽ quy định cái function để mà cho nó `filter`
+
 ### Thêm thông tin vào QR code Canvas
 
 ### Update bàn ăn

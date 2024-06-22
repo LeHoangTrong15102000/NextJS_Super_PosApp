@@ -65,7 +65,10 @@ export const columns: ColumnDef<TableItem>[] = [
     accessorKey: 'number',
     header: 'Số bàn',
     cell: ({ row }) => <div className='capitalize'>{row.getValue('number')}</div>,
+
+    // Nếu chúng ta không khai báo thì cái filterFn măcj định của thằng này nó sẽ chạy
     filterFn: (rows, columnId, filterValue) => {
+      // nếu filterValue không có thì return về các giá trị của column`number`
       if (!filterValue) return true
       return String(filterValue) === String(rows.getValue('number'))
     }
@@ -229,7 +232,9 @@ const TableBoard = () => {
         <div className='flex items-center py-4'>
           <Input
             placeholder='Lọc số bàn'
+            // Lấy ra column có số number vừa mới điền vào
             value={(table.getColumn('number')?.getFilterValue() as string) ?? ''}
+            // Khi mà onChange thì nó sẽ gọi tới column `number` và set cái filterValue cho cái columnNumber đấy
             onChange={(event) => table.getColumn('number')?.setFilterValue(event.target.value)}
             className='max-w-sm'
           />

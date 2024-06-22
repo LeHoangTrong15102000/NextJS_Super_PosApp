@@ -118,6 +118,7 @@ export default function EditTable({
                   </div>
                 </div>
               </FormItem>
+              {/* FormField thì nó đã có controller bên trong rồi */}
               <FormField
                 control={form.control}
                 name='capacity'
@@ -171,6 +172,7 @@ export default function EditTable({
                       <Label htmlFor='price'>Đổi QR Code</Label>
                       <div className='col-span-3 w-full space-y-2'>
                         <div className='flex items-center space-x-2'>
+                          {/* Lấy được trạng thái ở trong cái checkbox của field changeToken */}
                           <Switch id='changeToken' checked={field.value} onCheckedChange={field.onChange} />
                         </div>
                       </div>
