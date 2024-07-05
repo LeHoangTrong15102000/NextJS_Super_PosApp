@@ -55,6 +55,7 @@ export default function AppProvider({ children }: { children: React.ReactNode })
     >
       <QueryClientProvider client={queryClient}>
         {children}
+        {/* Component RefreshToken nằm cạnh children thì nó sẽ check liên tục */}
         <RefreshToken />
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>

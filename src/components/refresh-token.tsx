@@ -1,5 +1,6 @@
 'use client'
 
+import { useAppContext } from '@/components/app-provider'
 import { toast } from '@/components/ui/use-toast'
 import { checkAndRefreshToken } from '@/lib/utils'
 import { usePathname, useRouter } from 'next/navigation'
@@ -7,9 +8,14 @@ import { useEffect } from 'react'
 
 // Những page sau sẽ không refresh-token
 const UNAUTHENTICATED_PATH = ['/login', '/register', '/refresh-token']
+
+// Component refresh token thì cứ 1s thì nó sẽ check liên tục cái refresh-token để mà lấy ra accessToken mới
 const RefreshToken = () => {
+  // Lấy ra cái pathname hiện tại trên thanh URL
   const pathname = usePathname()
   const router = useRouter()
+
+  const { setIsAuth } = useAppContext()
 
   // useEffect để mà chúng ta check set cái Interval các kiểu
   useEffect(() => {
@@ -33,6 +39,8 @@ const RefreshToken = () => {
     const TIMEOUT = 1000
     // Vì sau khi mà effect function nó chạy thì cái callback của Interval sau TIMEOUT thì nó mới chạy
     // AT thời gian hết hạn là 10s thì sau 1s sẽ check 1 lần
+
+    // Vì chính cái function này chúng ta truyền vào cái `setInterval` nên là nó có lỗi gì thì chúng ta cùng phải clear cái Interval đi
     interval = setInterval(
       () =>
         checkAndRefreshToken({
@@ -41,6 +49,7 @@ const RefreshToken = () => {
             toast({
               description: 'Hết phiên đăng nhập!!'
             })
+            setIsAuth(false)
             router.push('/login')
           }
         }),
@@ -51,7 +60,7 @@ const RefreshToken = () => {
     return () => {
       clearInterval(interval)
     }
-  }, [pathname, router])
+  }, [pathname, router, setIsAuth])
   return null
 }
 

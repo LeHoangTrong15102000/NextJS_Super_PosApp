@@ -75,7 +75,7 @@ export const checkAndRefreshToken = async (param?: { onError?: () => void; onSuc
   // Còn khi chúng ta dùng cú pháp new Date().getTime() thì nó sẽ trả về epoch time là (ms)
 
   // Lấy ra thời điểm hiện tại theo s, math.round là để nó làm tròn
-  const now = Math.round(new Date().getTime() / 1000)
+  const now = Math.round(new Date().getTime() / 1000) // Theo tiêu chuẩn Epoch time(s)
   // Trường hợp refreshToken hết hạn thì không xử lý nữa
   if (decodedRefreshToken.exp <= now) {
     removeTokensFromLocalStorage()
@@ -84,7 +84,7 @@ export const checkAndRefreshToken = async (param?: { onError?: () => void; onSuc
   }
   // Ví dụ accessToken của chúng ta có thời gian hết hạn là 10s
   // Thì mình sẽ kiểm tra còn 1/3 thời gian thì chúng ta sẽ cho refreshToken lại
-  // Thời gian còn lại sẽ dựa trên: decodedAccessToken.exp - now <= 3
+  // Thời gian còn lại sẽ dựa trên: decodedAccessToken.exp - now <= 3(bé hơn khoảng thời gian sống của AT/3)
   // Thời gian hết hạn AT decodedAccessToken.exp - decodedAccessToken.iat
   if (decodedAccessToken.exp - now < (decodedAccessToken.exp - decodedAccessToken.iat) / 3) {
     // Gọi API refreshToken

@@ -35,7 +35,7 @@ const RefreshTokenLogic = () => {
       // Nên là lỡ nếu mà ng dùng vào refreshToken nó không chạy thì sẽ đá về home
       router.push('/')
     }
-  }, [router, refreshTokenFromUrl, redirectPathname])
+  }, [router, refreshTokenFromUrl, redirectPathname, refreshTokenFromLocalStorage])
 
   return <div>Refresh token...</div>
 }

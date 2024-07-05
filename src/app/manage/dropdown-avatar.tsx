@@ -39,7 +39,7 @@ const DropdownAvatar = () => {
         description: result.payload.message
       })
       setIsAuth(false)
-      router.push('/')
+      router.push('/login')
     } catch (error) {
       //  Phòng trường hợp cái nextServer nó bị cái vấn đề gì đó bị lỗi thì chúng ta vẫn có thể xử lý được
       handleErrorApi({
