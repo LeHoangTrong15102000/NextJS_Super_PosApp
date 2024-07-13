@@ -75,7 +75,10 @@ export const checkAndRefreshToken = async (param?: { onError?: () => void; onSuc
   // Còn khi chúng ta dùng cú pháp new Date().getTime() thì nó sẽ trả về epoch time là (ms)
 
   // Lấy ra thời điểm hiện tại theo s, math.round là để nó làm tròn
-  const now = Math.round(new Date().getTime() / 1000) // Theo tiêu chuẩn Epoch time(s)
+  // Trừ đi cho 1 vì phòng cái trường hợp mà nó chênh lệch ra ms ở lúc set vào cookie
+  // Xử lý như này để mà cái token ở thằng cookies nó sẽ bị xóa trước khi mà thằng middleware nó sẽ check cái logic redirect
+  const now = (new Date().getTime() / 1000) - 1// Theo tiêu chuẩn Epoch time(s)
+
   // Trường hợp refreshToken hết hạn thì không xử lý nữa
   if (decodedRefreshToken.exp <= now) {
     removeTokensFromLocalStorage()
