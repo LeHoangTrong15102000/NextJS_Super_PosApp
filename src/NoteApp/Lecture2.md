@@ -81,6 +81,12 @@
 
 ## Chương 12 Trang chủ và caching
 
+### Fetch data tại trang chủ
+
+- Thì ở cái trang này chúng ta có sử dụng SEO cho cái trang này nên là chúng ta cần phải sử dụng Server component ở cái trang này
+
+- Khi mà chúng ta fetch một cái ảnh là localhost thì chúng ta cần phải khai báo nó ở trong `next.config`
+
 ## Chương 13 Khách hàng gọi món
 
 ## Chương 14 Quản lí đơn hàng
