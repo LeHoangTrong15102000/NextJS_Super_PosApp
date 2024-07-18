@@ -24,7 +24,7 @@ import { useAppContext } from '@/components/app-provider'
 // }
 
 const DropdownAvatar = () => {
-  const { setIsAuth } = useAppContext()
+  const { setRole } = useAppContext()
   const { data } = useAccountMe()
   const logoutMutation = useLogoutMutation()
   const router = useRouter()
@@ -38,7 +38,7 @@ const DropdownAvatar = () => {
       toast({
         description: result.payload.message
       })
-      setIsAuth(false)
+      setRole()
       router.push('/login')
     } catch (error) {
       //  Phòng trường hợp cái nextServer nó bị cái vấn đề gì đó bị lỗi thì chúng ta vẫn có thể xử lý được

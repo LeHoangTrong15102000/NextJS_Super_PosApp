@@ -15,7 +15,7 @@ import { Suspense, useEffect } from 'react'
 import { useAppContext } from '@/components/app-provider'
 
 function LoginFormLogic() {
-  const { isAuth, setIsAuth } = useAppContext()
+  const { setRole } = useAppContext()
   const loginMutation = useLoginMutation()
 
   const searchParams = useSearchParams()
@@ -31,9 +31,9 @@ function LoginFormLogic() {
 
   useEffect(() => {
     if (clearTokens) {
-      setIsAuth(false)
+      setRole()
     }
-  }, [clearTokens, setIsAuth])
+  }, [clearTokens, setRole])
 
   const onSubmit = async (data: LoginBodyType) => {
     // Khi mà nhấn submit thì react hook form nó sẽ validate cái form bằng zode schema
@@ -43,7 +43,7 @@ function LoginFormLogic() {
       toast({
         description: result.payload.message
       })
-      setIsAuth(true)
+      setRole(result.payload.data.account.role)
       router.push('/manage/dashboard')
       // router.refresh()
     } catch (error: any) {

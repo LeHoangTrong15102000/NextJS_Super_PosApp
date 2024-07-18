@@ -10,7 +10,7 @@ import { Suspense, useEffect, useRef } from 'react'
 const LogoutLogic = () => {
   const { mutateAsync } = useLogoutMutation()
   const searchParams = useSearchParams()
-  const { setIsAuth } = useAppContext()
+  const { setRole } = useAppContext()
 
   const refreshTokenFromUrl = searchParams.get('refreshToken')
   const accessTokenFromUrl = searchParams.get('accessToken')
@@ -35,7 +35,7 @@ const LogoutLogic = () => {
           setTimeout(() => {
             ref.current = null
           }, 1000)
-          setIsAuth(false)
+          setRole()
           toast({
             description: messageResult
           })
@@ -50,7 +50,15 @@ const LogoutLogic = () => {
       // Tránh trường hợp mà ng khác gửi cái đường link mà chúng ta cứ ở mãi cái trang này thì nó không hay
       router.push('/')
     }
-  }, [mutateAsync, router, refreshTokenFromUrl, accessTokenFromUrl, setIsAuth])
+  }, [
+    mutateAsync,
+    router,
+    refreshTokenFromUrl,
+    accessTokenFromUrl,
+    setRole,
+    accessTokenFromLocalStorage,
+    refreshTokenFromLocalStorage
+  ])
   return <div>Log out...</div>
 }
 

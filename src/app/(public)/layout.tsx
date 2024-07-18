@@ -10,11 +10,6 @@ export default function Layout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-
-  const runCheck
-
-
-  
   return (
     <div className='relative flex min-h-screen w-full flex-col'>
       <header className='sticky top-0 z-20 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6'>
