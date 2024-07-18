@@ -87,6 +87,40 @@
 
 - Khi mà chúng ta fetch một cái ảnh là localhost thì chúng ta cần phải khai báo nó ở trong `next.config`
 
+- Để tránh trường hợp bị cache khi mà build thì chúng ta nên xoá thư mục `cache` cũ trước khi build ra thư mục mới
+
+  - Và cái cache khi build này nó chỉ có ảnh hưởng tới cái page nào mà sử dụng API mà bị `cache` hay là những page `static rendering` thì nó sẽ bị caching khi mà chúng ta build
+
+  - Còn khi mà chúng ta build những cái page `dynamic` thì nó sẽ không có bị cache khi mà build
+
+### Xử lý caching với kỹ thuật ISR
+
+- Thì khi mà chúng ta build cái project rồi thì nó generate ra cái file html thì cái file đó nó không có thay đổi, thì khi mà chúng ta cập nhật API thì cái file đó cũng không có thay đổi -> Thì nó sẽ gây ra cái vấn đề caching rất là khó chịu
+
+  - Thì đây vừa là một tính năng vừa là một cái khá khó chịu của thằng `nextjs`
+
+  - Thì bây giờ chúng ta mong muốn là mỗi là mà chúng ta cập nhật cái dish ở trang admin thì chỉ mỗi cái file `index.html(Homepage)` thì nó bị làm mới mà thôi
+
+  - Còn những cái file như là `login` `logout` `refreshToken` thì nó không bị làm mới lại
+
+  -> Thì sẽ có một cách, lên trang chủ của nextjs và đọc nội dung `data fetching, caching, Revalidating`
+
+  - Thì sau một khoảng thời gian mà cái `page` nào mà nó sử dụng cái `fetchAPI` này thì nó sẽ tự động build lại cái `index.html` của nó hoặc là chúng ta có thể revalidate dựa trên cái `request` - `on-demand Revalidation`
+
+  - Thì nếu chúng ta muốn nó revalidate ngay lập tức thì nó sẽ sử dụng cái `tags['tag-name']` -> Và chúng ta sẽ sử dụng cái function đó là `revalidaTag`
+
+  - `API revalidaTag` có thể chạy trong một cái `server-action` hoặc là chạy trong một cái `route handler`
+
+  - Khi mà chúng ta cập nhật một cái dishes thành công thì chúng ta gọi đến cái `route handler` là được
+
+  - Khi mà chúng ta revalidate thì nó chưa có build cái file này lại ngay đâu -> Khi mà người dùng người ta vào thì nó mới build lại `có cái request` đến thì nó mới tiến thành build lại
+
+  - Khi mà nó build xong rồi thì những cái req sau đó thì nó chỉ cần dùng cái `index.html` nó xài là được
+
+  - Oke vậy đây chính là cách giúp chúng ta cập nhật lại thằng `data` ở Homepage(server component)
+
+- Thì cái kỹ thuật này áp dụng cho những cái page là `static rendering` -> Khi mà chúng ta buộc nó build lại thì nó sẽ build lại cho chúng ta
+
 ## Chương 13 Khách hàng gọi món
 
 ## Chương 14 Quản lí đơn hàng

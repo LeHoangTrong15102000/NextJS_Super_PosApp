@@ -3,7 +3,9 @@ import { CreateDishBodyType, DishListResType, DishResType, UpdateDishBodyType } 
 
 const PREFIX = '/dishes'
 const dishApiRequest = {
-  getListDish: () => http.get<DishListResType>(`${PREFIX}`),
+  // Nextjs 14 thì mặc định nó là `cache: 'no-store'` (static rendering)
+  // Nextjs 15 thì mặc định nó sẽ là `cache: 'force-cache'` (dynamic rendering)
+  getListDish: () => http.get<DishListResType>(`${PREFIX}`, { next: { tags: ['dishes-collection'] } }),
   getDishDetail: (dishId: number) => http.get<DishResType>(`${PREFIX}/${dishId}`),
   addDish: (body: CreateDishBodyType) => http.post<DishResType>(`${PREFIX}`, body),
   updateDish: (dishId: number, body: UpdateDishBodyType) => http.put<DishResType>(`${PREFIX}/${dishId}`, body),

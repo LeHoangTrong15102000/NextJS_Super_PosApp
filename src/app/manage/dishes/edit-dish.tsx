@@ -24,6 +24,7 @@ import { DishStatus, DishStatusValues } from '@/constants/type'
 import { Textarea } from '@/components/ui/textarea'
 import { useUploadMediaMutation } from '@/queries/useMedia'
 import { useGetDishQuery, useUpdateDishMutation } from '@/queries/useDish'
+import revalidateApiRequest from '@/apiRequests/revalidate'
 
 const EditDish = ({
   id,
@@ -93,6 +94,7 @@ const EditDish = ({
         }
       }
       const result = await updateDishMutation.mutateAsync(body)
+      await revalidateApiRequest('dishes-collection')
       toast({
         description: result.payload.message
       })
@@ -124,7 +126,7 @@ const EditDish = ({
       <DialogContent className='max-h-screen overflow-auto sm:max-w-[600px]'>
         <DialogHeader>
           <DialogTitle>Cập nhật món ăn</DialogTitle>
-          <DialogDescription>Các trường sau đây là bắ buộc: Tên, ảnh</DialogDescription>
+          <DialogDescription>Các trường sau đây là bắt buộc: Tên, ảnh</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form

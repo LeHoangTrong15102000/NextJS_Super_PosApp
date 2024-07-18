@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useAddDishMutation } from '@/queries/useDish'
 import { useUploadMediaMutation } from '@/queries/useMedia'
 import { toast } from '@/components/ui/use-toast'
+import revalidateApiRequest from '@/apiRequests/revalidate'
 
 const AddDish = () => {
   const [file, setFile] = useState<File | null>(null)
@@ -64,6 +65,7 @@ const AddDish = () => {
         }
       }
       const result = await addDishMutation.mutateAsync(body)
+      await revalidateApiRequest('dishes-collection')
       toast({
         description: result.payload.message
       })
