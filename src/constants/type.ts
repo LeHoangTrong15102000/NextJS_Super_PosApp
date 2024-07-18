@@ -1,15 +1,17 @@
 export const TokenType = {
   ForgotPasswordToken: 'ForgotPasswordToken',
   AccessToken: 'AccessToken',
-  RefreshToken: 'RefreshToken'
+  RefreshToken: 'RefreshToken',
+  TableToken: 'TableToken'
 } as const
 
 export const Role = {
   Owner: 'Owner',
-  Employee: 'Employee'
+  Employee: 'Employee',
+  Guest: 'Guest'
 } as const
 
-export const RoleValues = [Role.Owner, Role.Employee] as const
+export const RoleValues = [Role.Owner, Role.Employee, Role.Guest] as const
 
 export const DishStatus = {
   Available: 'Available',

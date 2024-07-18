@@ -44,7 +44,7 @@ function LoginFormLogic() {
         description: result.payload.message
       })
       setIsAuth(true)
-      router.push('/')
+      router.push('/manage/dashboard')
       // router.refresh()
     } catch (error: any) {
       handleErrorApi({

@@ -1,5 +1,11 @@
 import envConfig from '@/config'
-import { normalizePath } from '@/lib/utils'
+import {
+  getAccessTokenFromLocalStorage,
+  normalizePath,
+  removeTokensFromLocalStorage,
+  setAccessTokenToLocalStorage,
+  setRefreshTokenToLocalStorage
+} from '@/lib/utils'
 import { LoginResType } from '@/schemaValidations/auth.schema'
 import { redirect, useRouter } from 'next/navigation'
 
@@ -110,7 +116,8 @@ const request = async <Response>(
           'Content-Type': 'application/json'
         }
   if (isClient) {
-    const accessToken = localStorage.getItem('accessToken')
+    // const accessToken = localStorage.getItem('accessToken')
+    const accessToken = getAccessTokenFromLocalStorage()
     if (accessToken) {
       baseHeaders.Authorization = `Bearer ${accessToken}`
     }
@@ -172,8 +179,7 @@ const request = async <Response>(
             // Sau khi mà logout thành công thì set cái sessionToken lại thành rỗng
             // clientSessionToken.value = '';
             // clientSessionToken.expiresAt = new Date().toISOString();
-            localStorage.removeItem('accessToken')
-            localStorage.removeItem('refreshToken')
+            removeTokensFromLocalStorage()
             clientLogoutRequest = null
             // Và cho nó redirect sang cái page là login
             // Redirect về trang login có thể dẫn đến lặp vô hạn, nếu không được xử lý đúng cách, vì nếu rơi vào trường hợp tại trang login chúng ta có gọi các API cần accessToken, mà accessToken bị xóa thì nó lại nhảy vào đây, và cứ thể nó sẽ bị lặp
@@ -202,14 +208,17 @@ const request = async <Response>(
     const normalizeUrl = normalizePath(url)
     // if (['auth/login'].some((item) => item === normalizeUrl))
 
-    if (normalizeUrl === 'api/auth/login') {
+    if (['api/auth/login', 'api/guest/auth/login'].includes(normalizeUrl)) {
       const { accessToken, refreshToken } = (payload as LoginResType).data
-      localStorage.setItem('accessToken', accessToken)
-      localStorage.setItem('refreshToken', refreshToken)
+      // localStorage.setItem('accessToken', accessToken)
+      // localStorage.setItem('refreshToken', refreshToken)
+      setAccessTokenToLocalStorage(accessToken)
+      setRefreshTokenToLocalStorage(refreshToken)
       // clientSessionToken.value = (payload as LoginResType | RegisterResType).data.token;
-    } else if (normalizeUrl === 'api/auth/logout') {
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
+    } else if (['api/auth/logout', 'api/guest/auth/logout'].includes(normalizeUrl)) {
+      // localStorage.removeItem('accessToken')
+      // localStorage.removeItem('refreshToken')
+      removeTokensFromLocalStorage()
     }
   }
   // Trả về data từ  server đã được .json và được xử lý rồi

@@ -7,6 +7,7 @@ import { DishStatus, TableStatus } from '@/constants/type'
 import envConfig from '@/config'
 import jwt from 'jsonwebtoken'
 import authApiRequest from '@/apiRequests/auth'
+import { TokenPayload } from '@/types/jwt.types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -63,21 +64,23 @@ export const checkAndRefreshToken = async (param?: { onError?: () => void; onSuc
   // Chưa đăng nhập thì cũng không cho chạy
   if (!accessToken || !refreshToken) return
 
-  const decodedAccessToken = jwt.decode(accessToken) as {
-    exp: number
-    iat: number
-  }
-  const decodedRefreshToken = jwt.decode(refreshToken) as {
-    exp: number
-    iat: number
-  }
+  // const decodedAccessToken = jwt.decode(accessToken) as {
+  //   exp: number
+  //   iat: number
+  // }
+  // const decodedRefreshToken = jwt.decode(refreshToken) as {
+  //   exp: number
+  //   iat: number
+  // }
+  const decodedAccessToken = decodeToken(accessToken)
+  const decodedRefreshToken = decodeToken(refreshToken)
   //  Thời điểm hết hạn của token là tính theo epoch time (s)
   // Còn khi chúng ta dùng cú pháp new Date().getTime() thì nó sẽ trả về epoch time là (ms)
 
   // Lấy ra thời điểm hiện tại theo s, math.round là để nó làm tròn
   // Trừ đi cho 1 vì phòng cái trường hợp mà nó chênh lệch ra ms ở lúc set vào cookie
   // Xử lý như này để mà cái token ở thằng cookies nó sẽ bị xóa trước khi mà thằng middleware nó sẽ check cái logic redirect
-  const now = (new Date().getTime() / 1000) - 1// Theo tiêu chuẩn Epoch time(s)
+  const now = new Date().getTime() / 1000 - 1 // Theo tiêu chuẩn Epoch time(s)
 
   // Trường hợp refreshToken hết hạn thì không xử lý nữa
   if (decodedRefreshToken.exp <= now) {
@@ -146,4 +149,9 @@ export const getVietnameseTableStatus = (status: (typeof TableStatus)[keyof type
 
 export const getTableLink = ({ token, tableNumber }: { token: string; tableNumber: number }) => {
   return envConfig.NEXT_PUBLIC_URL + '/tables/' + tableNumber + '?token=' + token
+}
+
+// Decode token
+export const decodeToken = (token: string) => {
+  return jwt.decode(token) as TokenPayload
 }

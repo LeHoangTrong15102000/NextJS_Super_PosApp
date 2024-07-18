@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken'
 import { HttpError } from '@/lib/http'
 
 export async function POST(request: Request) {
-  // res chính là cái body mà người dùng gửi lên và trả về dữ liệu dược định dạng
+  // req chính là cái body mà người dùng gửi lên và trả về dữ liệu dược định dạng
   // Tại vì người dùng gửi lên body ở dạng là `string`
   const body = (await request.json()) as LoginBodyType
   const cookieStore = cookies()
