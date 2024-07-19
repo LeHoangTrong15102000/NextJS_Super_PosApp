@@ -1,30 +1,39 @@
 'use client'
 
 import { useAppContext } from '@/components/app-provider'
+import { Role } from '@/constants/type'
 import { getAccessTokenFromLocalStorage, getRefreshTokenFromLocalStorage } from '@/lib/utils'
+import { RoleType } from '@/types/jwt.types'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 
-const menuItems = [
+const menuItems: {
+  title: string
+  href: string
+  role?: RoleType[]
+  hideWhenLogin?: boolean
+}[] = [
   {
-    title: 'Món ăn',
-    href: '/menu'
+    title: 'Trang chủ',
+    href: '/'
+  },
+  {
+    title: 'Menu',
+    href: '/guest/menu',
+    role: [Role.Guest]
     // authRequired = undefined nghĩa là đăng nhập  hay chưa đều cho hiển thị
   },
-  {
-    title: 'Đơn hàng',
-    href: '/orders',
-    authRequired: true
-  },
+
   {
     title: 'Đăng nhập',
     href: '/login',
-    authRequired: false // khi false nghĩa là chưa đăng nhập thì sẽ hiển thị
+    // khi false nghĩa là chưa đăng nhập thì sẽ hiển thị
+    hideWhenLogin: true
   },
   {
     title: 'Quản lý',
     href: '/manage/dashboard',
-    authRequired: true // khi true nghĩa là đăng nhập rồi thì mới cho hiển thị
+    role: [Role.Owner, Role.Employee] // khi true nghĩa là đăng nhập rồi thì mới cho hiển thị
   }
 ]
 
