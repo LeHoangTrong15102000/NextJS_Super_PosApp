@@ -3,11 +3,12 @@ import { EntityError } from '@/lib/http'
 import { type ClassValue, clsx } from 'clsx'
 import { UseFormSetError } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
-import { DishStatus, TableStatus } from '@/constants/type'
+import { DishStatus, Role, TableStatus } from '@/constants/type'
 import envConfig from '@/config'
 import jwt from 'jsonwebtoken'
 import authApiRequest from '@/apiRequests/auth'
 import { TokenPayload } from '@/types/jwt.types'
+import guestApiRequest from '../apiRequests/guest'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -95,9 +96,11 @@ export const checkAndRefreshToken = async (param?: { onError?: () => void; onSuc
   if (decodedAccessToken.exp - now < (decodedAccessToken.exp - decodedAccessToken.iat) / 3) {
     // Gọi API refreshToken
     try {
-      const { payload } = await authApiRequest.refreshToken()
-      setAccessTokenToLocalStorage(payload.data.accessToken)
-      setRefreshTokenToLocalStorage(payload.data.refreshToken)
+      // const { payload } = await authApiRequest.refreshToken()
+      const role = decodedRefreshToken.role
+      const res = role === Role.Guest ? await guestApiRequest.refreshToken() : await authApiRequest.refreshToken()
+      setAccessTokenToLocalStorage(res.payload.data.accessToken)
+      setRefreshTokenToLocalStorage(res.payload.data.refreshToken)
       param?.onSuccess && param.onSuccess()
     } catch (error) {
       // Khi bị lỗi thì chúng ta sẽ logout vì đã handle ở bên route handler khi bị lỗi 401,

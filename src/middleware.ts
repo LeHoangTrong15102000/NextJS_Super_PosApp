@@ -3,7 +3,9 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const privatePaths = ['/manage']
+const managePaths = ['/manage']
+const guestPaths = ['/guest']
+const privatePaths = [...managePaths, ...guestPaths]
 const unAuthPaths = ['/login']
 
 // This function can be marked `async` if using `await` inside
@@ -20,6 +22,8 @@ export function middleware(request: NextRequest) {
   // Chỗ này chúng ta chưa xử lý accessToken nên là không để AT vào đây được, vì mà để vào đây thì nó giống như trường hợp là đang dùng mà hét hạn AT
   // Ở đây phải check là ko có RT mới là chưa đăng nhập vì khi mà để AT thì khi mà AT nó hết hạn mà nó đá ng dùng về login thì không đúng lắm vì chúng ta chưa làm gia hạn AT
   // Và cái case cũng đúng cho trường hợp là khi mà RT hết hạn thì bắt buộc người dùng phải đăng nhập lại
+
+  // 1.  Chưa đăng nhập thì không cho vào private paths
   if (privatePaths.some((path) => pathname.startsWith(path)) && !refreshToken) {
     const url = new URL('/login', request.url)
     url.searchParams.set('clearTokens', 'true')
@@ -27,20 +31,33 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Đăng nhập rồi thì sẽ không cho vào login nữa
-  if (unAuthPaths.some((path) => pathname.startsWith(path)) && refreshToken) {
-    return NextResponse.redirect(new URL('/', request.url))
-  }
+  // 2. Trương hợp đã đăng nhập rồi
+  if (refreshToken) {
+    // 2.1 Nếu có tình vào trang login sẽ bị redirect về trang chủ
+    if (unAuthPaths.some((path) => pathname.startsWith(path)) && refreshToken) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
 
-  // Trường hợp đăng nhập rồi, nhưng accessToken lại hết hạn và cũng có thể là refreshToken
-  // Do chưa xử lý refreshToken nên khi mà AT hết hạn và còn RT thì cho người dùng logout
-  if (privatePaths.some((path) => pathname.startsWith(path)) && !accessToken && refreshToken) {
-    const url = new URL('/refresh-token', request.url)
-    url.searchParams.set('refreshToken', refreshToken)
-    url.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(url)
+    // Trường hợp đăng nhập rồi, nhưng accessToken lại hết hạn và cũng có thể là refreshToken
+    // Do chưa xử lý refreshToken nên khi mà AT hết hạn và còn RT thì cho người dùng logout
+    // 2.2 Nhưng accessToken lại hết hạn
+    if (privatePaths.some((path) => pathname.startsWith(path)) && !accessToken && refreshToken) {
+      // Tạo ra url refresh-token
+      const url = new URL('/refresh-token', request.url)
+      url.searchParams.set('refreshToken', refreshToken)
+      // Cần gửi cái pathname để mà sau khi mà nó refreshToken thì sẽ quay lại cái pathname hồi nảy
+      url.searchParams.set('redirect', pathname)
+      console.log('check đường dẫn url')
+      return NextResponse.redirect(url)
+    }
+
+    // 2.3 Vào không đúng role thì redirect về trang chủ
+    // if () {
+
+    // }
+
+    return NextResponse.next()
   }
-  return NextResponse.next()
 }
 
 // See "Matching Paths" below to learn more
