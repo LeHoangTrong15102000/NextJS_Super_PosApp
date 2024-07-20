@@ -15,7 +15,7 @@ const RefreshToken = () => {
   const pathname = usePathname()
   const router = useRouter()
 
-  const { setIsAuth } = useAppContext()
+  const { setRole } = useAppContext()
 
   // useEffect để mà chúng ta check set cái Interval các kiểu
   useEffect(() => {
@@ -49,7 +49,7 @@ const RefreshToken = () => {
             toast({
               description: 'Hết phiên đăng nhập!!'
             })
-            setIsAuth(false)
+            setRole()
             router.push('/login')
           }
         }),
@@ -60,7 +60,7 @@ const RefreshToken = () => {
     return () => {
       clearInterval(interval)
     }
-  }, [pathname, router, setIsAuth])
+  }, [pathname, router, setRole])
   return null
 }
 

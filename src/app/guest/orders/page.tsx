@@ -1,5 +1,5 @@
 const OrderPage = () => {
-  return <div></div>
+  return <div>OrderPage</div>
 }
 
 export default OrderPage
