@@ -22,7 +22,7 @@ const dishes = [
 ]
 export default async function MenuPage() {
   return (
-    <div className='max-w-[400px] mx-auto space-y-4'>
+    <div className='mx-auto max-w-[400px] space-y-4'>
       <h1 className='text-center text-xl font-bold'>🍕 Menu quán</h1>
       {dishes.map((dish) => (
         <div key={dish.id} className='flex gap-4'>
@@ -33,7 +33,7 @@ export default async function MenuPage() {
               height={100}
               width={100}
               quality={100}
-              className='object-cover w-[80px] h-[80px] rounded-md'
+              className='h-[80px] w-[80px] rounded-md object-cover'
             />
           </div>
           <div className='space-y-1'>
@@ -41,14 +41,14 @@ export default async function MenuPage() {
             <p className='text-xs'>{dish.description}</p>
             <p className='text-xs font-semibold'>2,200,000 đ</p>
           </div>
-          <div className='flex-shrink-0 ml-auto flex justify-center items-center'>
-            <div className='flex gap-1 '>
+          <div className='ml-auto flex flex-shrink-0 items-center justify-center'>
+            <div className='flex gap-1'>
               <Button className='h-6 w-6 p-0'>
-                <Minus className='w-3 h-3' />
+                <Minus className='h-3 w-3' />
               </Button>
-              <Input type='text' readOnly className='h-6 p-1 w-8' />
+              <Input type='text' readOnly className='h-6 w-8 p-1' />
               <Button className='h-6 w-6 p-0'>
-                <Plus className='w-3 h-3' />
+                <Plus className='h-3 w-3' />
               </Button>
             </div>
           </div>

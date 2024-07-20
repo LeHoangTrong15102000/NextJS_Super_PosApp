@@ -1,7 +1,8 @@
-import { removeTokensFromLocalStorage } from '@/lib/utils'
+import { decodeToken, removeTokensFromLocalStorage } from '@/lib/utils'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { Role } from './constants/type'
 
 const managePaths = ['/manage']
 const guestPaths = ['/guest']
@@ -52,9 +53,14 @@ export function middleware(request: NextRequest) {
     }
 
     // 2.3 Vào không đúng role thì redirect về trang chủ
-    // if () {
-
-    // }
+    const role = decodeToken(refreshToken).role
+    // guest nhưng mà cố vào trang manage của owner
+    const isGuestGoToManagePath = role === Role.Guest && managePaths.some((path) => pathname.startsWith(path))
+    // owner nhưng mà cố vào trang của guest
+    const isNotGuestGoToGuestPath = role !== Role.Guest && guestPaths.some((path) => pathname.startsWith(path))
+    if (isGuestGoToManagePath || isNotGuestGoToGuestPath) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
 
     return NextResponse.next()
   }
@@ -63,5 +69,5 @@ export function middleware(request: NextRequest) {
 // See "Matching Paths" below to learn more
 // middleware này sẽ áp dụng cho những path đươc khai báo bên dưới
 export const config = {
-  matcher: ['/manage/:path*', '/login']
+  matcher: ['/manage/:path*', '/guest/:path*', '/login']
 }

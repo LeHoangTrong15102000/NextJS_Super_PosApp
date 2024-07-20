@@ -28,3 +28,21 @@ export const TableStatus = {
 } as const
 
 export const TableStatusValues = [TableStatus.Available, TableStatus.Hidden, TableStatus.Reserved] as const
+
+export const OrderStatus = {
+  Pending: 'Pending',
+  Processing: 'Processing',
+  Rejected: 'Rejected',
+  Delivered: 'Delivered',
+  Paid: 'Paid'
+}
+
+export const OrderStatusValues = [
+  OrderStatus.Pending,
+  OrderStatus.Processing,
+  OrderStatus.Rejected,
+  OrderStatus.Delivered,
+  OrderStatus.Paid
+] as const
+
+export const ManagerRoom = 'manager' as const

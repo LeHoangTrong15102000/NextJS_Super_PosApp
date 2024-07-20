@@ -2,9 +2,11 @@
 
 import { useAppContext } from '@/components/app-provider'
 import { Role } from '@/constants/type'
-import { getAccessTokenFromLocalStorage, getRefreshTokenFromLocalStorage } from '@/lib/utils'
+import { cn, getAccessTokenFromLocalStorage, getRefreshTokenFromLocalStorage, handleErrorApi } from '@/lib/utils'
+import { useLogoutMutation } from '@/queries/useAuth'
 import { RoleType } from '@/types/jwt.types'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { useState, useEffect } from 'react'
 
 const menuItems: {
@@ -49,7 +51,7 @@ export default function NavItems({ className }: { className?: string }) {
   // const refreshTokenFromLocalStorage = getRefreshTokenFromLocalStorage()
   // const accessTokenFromLocalStorage = getAccessTokenFromLocalStorage()
   // const [isAuth, setIsAuth] = useState(false)
-  const { isAuth } = useAppContext()
+  // const { isAuth } = useAppContext()
 
   // useEffect(() => {
   //   if (accessTokenFromLocalStorage) {
@@ -62,12 +64,44 @@ export default function NavItems({ className }: { className?: string }) {
   //   setIsAuth(Boolean(accessTokenFromLocalStorage))
   // }, [])
 
-  return menuItems.map((item) => {
-    if ((item.authRequired === false && isAuth) || (item.authRequired === true && !isAuth)) return null
-    return (
-      <Link href={item.href} key={item.href} className={className}>
-        {item.title}
-      </Link>
-    )
-  })
+  const { role, setRole } = useAppContext()
+  const logoutMutation = useLogoutMutation()
+  const router = useRouter()
+
+  const logout = async () => {
+    if (logoutMutation.isPending) return
+    try {
+      await logoutMutation.mutateAsync()
+      setRole()
+      router.push('/')
+    } catch (error: any) {
+      handleErrorApi({
+        error
+      })
+    }
+  }
+  return (
+    <>
+      {menuItems.map((item) => {
+        // Trường hợp đăng nhập thì chỉ hiển thị menu đăng nhập
+        const isAuth = item.role && role && item.role.includes(role)
+        // Trường hợp menu item có thể hiển thị dù cho đã đăng nhập hay chưa
+        const canShow = (item.role === undefined && !item.hideWhenLogin) || (!role && item.hideWhenLogin)
+        if (isAuth || canShow) {
+          return (
+            <Link href={item.href} key={item.href} className={className}>
+              {item.title}
+            </Link>
+          )
+        }
+        return null
+      })}
+      {role && (
+        // Hàm cn là hàm merge các className ở trong component
+        <div className={cn(className, 'cursor-pointer')} onClick={logout}>
+          Đăng xuất
+        </div>
+      )}
+    </>
+  )
 }
