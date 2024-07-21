@@ -1,12 +1,13 @@
 'use client'
 
 import { useAppContext } from '@/components/app-provider'
+import { toast } from '@/components/ui/use-toast'
 import { Role } from '@/constants/type'
 import { cn, getAccessTokenFromLocalStorage, getRefreshTokenFromLocalStorage, handleErrorApi } from '@/lib/utils'
 import { useLogoutMutation } from '@/queries/useAuth'
 import { RoleType } from '@/types/jwt.types'
 import Link from 'next/link'
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 
 const menuItems: {
@@ -24,6 +25,11 @@ const menuItems: {
     href: '/guest/menu',
     role: [Role.Guest]
     // authRequired = undefined nghĩa là đăng nhập  hay chưa đều cho hiển thị
+  },
+  {
+    title: 'Đơn hàng',
+    href: '/guest/orders',
+    role: [Role.Guest]
   },
 
   {
@@ -71,7 +77,10 @@ export default function NavItems({ className }: { className?: string }) {
   const logout = async () => {
     if (logoutMutation.isPending) return
     try {
-      await logoutMutation.mutateAsync()
+      const result = await logoutMutation.mutateAsync()
+      toast({
+        description: result.payload.message
+      })
       setRole()
       router.push('/')
     } catch (error: any) {
