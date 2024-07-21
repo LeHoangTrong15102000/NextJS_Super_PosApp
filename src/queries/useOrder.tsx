@@ -13,6 +13,7 @@ export const useUpdateOrderMutation = () => {
   })
 }
 
+// lấy ra danh sách order ở trên hệ thống
 export const useGetOrderListQuery = () => {
   return useQuery({
     queryKey: ['orders-list'],

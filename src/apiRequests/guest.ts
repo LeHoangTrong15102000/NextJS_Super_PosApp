@@ -48,6 +48,7 @@ const guestApiRequest = {
     return result
   },
   createOrder: (body: GuestCreateOrdersBodyType) => http.post<GuestCreateOrdersResType>('/guest/orders', body),
+  // Lấy ra danh sách các món trong order
   getOrderList: () => http.get<GuestGetOrdersResType>('/guest/orders')
 }
 

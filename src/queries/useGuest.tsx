@@ -15,6 +15,7 @@ export const useGuestLogoutMutation = () => {
   })
 }
 
+// Lấy ra danh sách order
 export const useGuestGetOrderListQuery = () => {
   return useQuery({
     queryKey: ['guest-orders-list'],
