@@ -3,7 +3,7 @@ import { EntityError } from '@/lib/http'
 import { type ClassValue, clsx } from 'clsx'
 import { UseFormSetError } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
-import { DishStatus, Role, TableStatus } from '@/constants/type'
+import { DishStatus, OrderStatus, Role, TableStatus } from '@/constants/type'
 import envConfig from '@/config'
 import jwt from 'jsonwebtoken'
 import authApiRequest from '@/apiRequests/auth'
@@ -147,6 +147,21 @@ export const getVietnameseTableStatus = (status: (typeof TableStatus)[keyof type
       return 'Đã đặt'
     default:
       return 'Ẩn'
+  }
+}
+
+export const getVietnameseOrderStatus = (status: (typeof OrderStatus)[keyof typeof OrderStatus]) => {
+  switch (status) {
+    case OrderStatus.Delivered:
+      return 'Đã phục vụ'
+    case OrderStatus.Paid:
+      return 'Đã thanh toán'
+    case OrderStatus.Pending:
+      return 'Chờ xử lý'
+    case OrderStatus.Processing:
+      return 'Đang chuẩn bị'
+    default:
+      return 'Từ chối'
   }
 }
 

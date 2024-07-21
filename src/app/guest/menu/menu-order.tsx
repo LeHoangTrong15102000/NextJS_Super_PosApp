@@ -4,12 +4,13 @@ import { Minus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useDishListQuery } from '@/queries/useDish'
-import { formatCurrency, handleErrorApi } from '@/lib/utils'
+import { cn, formatCurrency, handleErrorApi } from '@/lib/utils'
 import { useMemo, useState } from 'react'
 import { GuestCreateOrdersBodyType } from '@/schemaValidations/guest.schema'
 import { useGuestOrderMutation } from '@/queries/useGuest'
 import { useRouter } from 'next/navigation'
 import Quantity from './quantity'
+import { DishStatus } from '@/constants/type'
 
 export default function MenuOrder() {
   const { data } = useDishListQuery()
@@ -59,43 +60,44 @@ export default function MenuOrder() {
 
   return (
     <>
-      {dishes.map((dish) => (
-        <div key={dish.id} className='flex gap-4'>
-          <div className='flex-shrink-0'>
-            <Image
-              src={dish.image}
-              alt={dish.name}
-              height={100}
-              width={100}
-              quality={100}
-              className='h-[80px] w-[80px] rounded-md object-cover'
-            />
+      {dishes
+        .filter((dish) => dish.status !== DishStatus.Hidden)
+        .map((dish) => (
+          <div
+            key={dish.id}
+            className={cn('flex gap-4', {
+              'pointer-events-none': dish.status === DishStatus.Unavailable
+            })}
+          >
+            <div className='relative flex-shrink-0'>
+              {dish.status === DishStatus.Unavailable && (
+                <span className='absolute inset-0 flex items-center justify-center text-sm'>Hết hàng</span>
+              )}
+              <Image
+                src={dish.image}
+                alt={dish.name}
+                height={100}
+                width={100}
+                quality={100}
+                className='h-[80px] w-[80px] rounded-md object-cover'
+              />
+            </div>
+            <div className='space-y-1'>
+              <h3 className='text-sm'>{dish.name}</h3>
+              <p className='text-xs'>{dish.description}</p>
+              <p className='text-xs font-semibold'>{formatCurrency(dish.price)}</p>
+            </div>
+            <div className='ml-auto flex flex-shrink-0 items-center justify-center'>
+              <Quantity
+                onChange={(value) => handleChangeQuantity(dish.id, value)}
+                value={orders.find((order) => order.dishId === dish.id)?.quantity ?? 0}
+              />
+            </div>
           </div>
-          <div className='space-y-1'>
-            <h3 className='text-sm'>{dish.name}</h3>
-            <p className='text-xs'>{dish.description}</p>
-            <p className='text-xs font-semibold'>{formatCurrency(dish.price)}</p>
-          </div>
-          <div className='ml-auto flex flex-shrink-0 items-center justify-center'>
-            {/* <div className='flex gap-1'>
-              <Button className='h-6 w-6 p-0'>
-                <Minus className='h-3 w-3' />
-              </Button>
-              <Input type='text' readOnly className='h-6 w-8 p-1' />
-              <Button className='h-6 w-6 p-0'>
-                <Plus className='h-3 w-3' />
-              </Button>
-            </div> */}
-            <Quantity
-              onChange={(value) => handleChangeQuantity(dish.id, value)}
-              value={orders.find((order) => order.dishId === dish.id)?.quantity ?? 0}
-            />
-          </div>
-        </div>
-      ))}
+        ))}
       <div className='sticky bottom-0'>
         <Button className='w-full justify-between' onClick={handleCreateOrder} disabled={orders.length === 0}>
-          <span>Giỏ hàng · {orders.length} món</span>
+          <span>Đặt hàng · {orders.length} món</span>
           <span>{formatCurrency(totalPrice)}</span>
         </Button>
       </div>
