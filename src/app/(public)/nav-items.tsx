@@ -8,7 +8,17 @@ import { useLogoutMutation } from '@/queries/useAuth'
 import { RoleType } from '@/types/jwt.types'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from '@/components/ui/alert-dialog'
 
 const menuItems: {
   title: string
@@ -74,7 +84,7 @@ export default function NavItems({ className }: { className?: string }) {
   const logoutMutation = useLogoutMutation()
   const router = useRouter()
 
-  const logout = async () => {
+  const handleLogout = async () => {
     if (logoutMutation.isPending) return
     try {
       const result = await logoutMutation.mutateAsync()
@@ -89,6 +99,7 @@ export default function NavItems({ className }: { className?: string }) {
       })
     }
   }
+
   return (
     <>
       {menuItems.map((item) => {
@@ -107,9 +118,24 @@ export default function NavItems({ className }: { className?: string }) {
       })}
       {role && (
         // Hàm cn là hàm merge các className ở trong component
-        <div className={cn(className, 'cursor-pointer')} onClick={logout}>
-          Đăng xuất
-        </div>
+        // <div className={cn(className, 'cursor-pointer')} onClick={logout}>
+        //   Đăng xuất
+        // </div>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <div className={cn(className, 'cursor-pointer')}>Đăng xuất</div>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Bạn có muốn đăng xuất không?</AlertDialogTitle>
+              <AlertDialogDescription>Việc đăng xuất có thể làm mất đi hoá đơn của bạn</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Thoát</AlertDialogCancel>
+              <AlertDialogAction onClick={handleLogout}>OK</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </>
   )
