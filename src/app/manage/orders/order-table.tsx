@@ -138,6 +138,7 @@ export default function OrderTable() {
     setToDate(initToDate)
   }
 
+  // Xử lý socket io cho phần `order-table`
   useEffect(() => {
     if (socket.connected) {
       onConnect()

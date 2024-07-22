@@ -6,11 +6,15 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import { decodeToken, getAccessTokenFromLocalStorage, removeTokensFromLocalStorage } from '@/lib/utils'
 import { RoleType } from '@/types/jwt.types'
 
+// Default
+// staleTime: 0
+// gc: 5 phút (5 * 1000* 60)
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
-      refetchOnMount: false
+      refetchOnWindowFocus: false
+      // refetchOnMount: false
     }
   }
 })
