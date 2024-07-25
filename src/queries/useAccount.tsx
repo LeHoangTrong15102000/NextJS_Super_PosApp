@@ -3,6 +3,7 @@ import {
   AccountResType,
   ChangePasswordBodyType,
   CreateEmployeeAccountBodyType,
+  GetGuestListQueryParamsType,
   UpdateEmployeeAccountBodyType,
   UpdateMeBodyType
 } from '@/schemaValidations/account.schema'
@@ -82,5 +83,18 @@ export const useDeleteEmployeeMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['account-list'] })
     }
+  })
+}
+
+export const useGetGuestListQuery = (queryParams: GetGuestListQueryParamsType) => {
+  return useQuery({
+    queryFn: () => accountApiRequest.guestList(queryParams),
+    queryKey: ['guests', queryParams]
+  })
+}
+
+export const useCreateGuestMutation = () => {
+  return useMutation({
+    mutationFn: accountApiRequest.createGuest
   })
 }
