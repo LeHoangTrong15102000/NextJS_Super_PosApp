@@ -6,6 +6,7 @@ import { Role } from './constants/type'
 
 const managePaths = ['/manage']
 const guestPaths = ['/guest']
+const onlyOwnerPaths = ['/manage/accounts']
 const privatePaths = [...managePaths, ...guestPaths]
 const unAuthPaths = ['/login']
 
@@ -58,7 +59,9 @@ export function middleware(request: NextRequest) {
     const isGuestGoToManagePath = role === Role.Guest && managePaths.some((path) => pathname.startsWith(path))
     // owner nhưng mà cố vào trang của guest
     const isNotGuestGoToGuestPath = role !== Role.Guest && guestPaths.some((path) => pathname.startsWith(path))
-    if (isGuestGoToManagePath || isNotGuestGoToGuestPath) {
+    // Không phải owner nhưng mà lại cố tình truy cập vào route của owner
+    const isNotOwnerGoToOwnerPath = role !== Role.Owner && onlyOwnerPaths.some((path) => pathname.startsWith(path))
+    if (isGuestGoToManagePath || isNotGuestGoToGuestPath || isNotOwnerGoToOwnerPath) {
       return NextResponse.redirect(new URL('/', request.url))
     }
 
