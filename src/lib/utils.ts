@@ -58,7 +58,11 @@ export const removeTokensFromLocalStorage = () => {
 }
 
 // Check and Refresh Token
-export const checkAndRefreshToken = async (param?: { onError?: () => void; onSuccess?: () => void }) => {
+export const checkAndRefreshToken = async (param?: {
+  onError?: () => void
+  onSuccess?: () => void
+  force?: boolean
+}) => {
   // Không nên đưa logic lấy accessToken và refreshToken ra khỏi cái function này
   // Vì để mỗi lần mà checkAndRefreshToken được gọi thì chúng ta sẽ có AT và RT mới
   // Tránh hiện tượng nó lấy AT và RT cũ rồi gọi cho lần tiếp theo
@@ -95,7 +99,9 @@ export const checkAndRefreshToken = async (param?: { onError?: () => void; onSuc
   // Thì mình sẽ kiểm tra còn 1/3 thời gian thì chúng ta sẽ cho refreshToken lại
   // Thời gian còn lại sẽ dựa trên: decodedAccessToken.exp - now <= 3(bé hơn khoảng thời gian sống của AT/3)
   // Thời gian hết hạn AT decodedAccessToken.exp - decodedAccessToken.iat
-  if (decodedAccessToken.exp - now < (decodedAccessToken.exp - decodedAccessToken.iat) / 3) {
+
+  // Khi mà accessToken chưa hết hạn thì nếu mà chúng ta muốn nó refreshToken thì truyền vào cho nó một biến là force
+  if (param?.force || decodedAccessToken.exp - now < (decodedAccessToken.exp - decodedAccessToken.iat) / 3) {
     // Gọi API refreshToken
     try {
       // const { payload } = await authApiRequest.refreshToken()
