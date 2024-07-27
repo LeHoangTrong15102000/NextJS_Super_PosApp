@@ -1,41 +1,36 @@
-import { Home, LineChart, ShoppingCart, Users2, Salad, Table, LayoutDashboard } from 'lucide-react'
+import { Role } from '@/constants/type'
+import { Home, ShoppingCart, Users2, Salad, Table } from 'lucide-react'
 
 const menuItems = [
   {
-    title: 'Home',
-    Icon: Home,
-    href: '/'
-  },
-  {
     title: 'Dashboard',
-    Icon: LayoutDashboard,
-    href: '/manage/dashboard'
+    Icon: Home,
+    href: '/manage/dashboard',
+    roles: [Role.Owner, Role.Employee]
   },
   {
     title: 'Đơn hàng',
     Icon: ShoppingCart,
-    href: '/manage/orders'
+    href: '/manage/orders',
+    roles: [Role.Owner, Role.Employee]
   },
   {
     title: 'Bàn ăn',
     Icon: Table,
-    href: '/manage/tables'
+    href: '/manage/tables',
+    roles: [Role.Owner, Role.Employee]
   },
   {
     title: 'Món ăn',
     Icon: Salad,
-    href: '/manage/dishes'
-  },
-
-  {
-    title: 'Phân tích',
-    Icon: LineChart,
-    href: '/manage/analytics'
+    href: '/manage/dishes',
+    roles: [Role.Owner, Role.Employee]
   },
   {
     title: 'Nhân viên',
     Icon: Users2,
-    href: '/manage/accounts'
+    href: '/manage/accounts',
+    roles: [Role.Owner]
   }
 ]
 
