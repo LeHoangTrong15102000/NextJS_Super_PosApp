@@ -15,15 +15,17 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Upload } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Form, FormField, FormItem, FormMessage } from '@/components/ui/form'
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Switch } from '@/components/ui/switch'
 import { useGetEmployeeQuery, useUpdateEmployeeMutation } from '@/queries/useAccount'
 import { useUploadMediaMutation } from '@/queries/useMedia'
 import { toast } from '@/components/ui/use-toast'
 import { handleErrorApi } from '@/lib/utils'
+import { Role, RoleValues } from '@/constants/type'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-const EditEmployee = ({
+export default function EditEmployee({
   id,
   setId,
   onSubmitSuccess
@@ -31,15 +33,16 @@ const EditEmployee = ({
   id?: number | undefined
   setId: (value: number | undefined) => void
   onSubmitSuccess?: () => void
-}) => {
+}) {
   const [file, setFile] = useState<File | null>(null)
   const avatarInputRef = useRef<HTMLInputElement | null>(null)
+  const { data } = useGetEmployeeQuery({
+    id: id as number,
+    enabled: Boolean(id)
+  })
+  const updateAccountMutation = useUpdateEmployeeMutation()
+  const uploadMediaMutation = useUploadMediaMutation()
 
-  // Query get detail employee
-  // Thì có id truyền vào thì chúng ta mới callAPI getDetailEmployee
-  const { data } = useGetEmployeeQuery({ id: id as number, enabled: Boolean(id) })
-  const uploadMutation = useUploadMediaMutation()
-  const updateEmployeeMutation = useUpdateEmployeeMutation()
   const form = useForm<UpdateEmployeeAccountBodyType>({
     resolver: zodResolver(UpdateEmployeeAccountBody),
     defaultValues: {
@@ -48,7 +51,8 @@ const EditEmployee = ({
       avatar: undefined,
       password: undefined,
       confirmPassword: undefined,
-      changePassword: false
+      changePassword: false,
+      role: Role.Employee
     }
   })
   const avatar = form.watch('avatar')
@@ -63,47 +67,42 @@ const EditEmployee = ({
 
   useEffect(() => {
     if (data) {
-      const { name, avatar, email } = data.payload.data
+      const { name, avatar, email, role } = data.payload.data
       form.reset({
         name,
-        email,
         avatar: avatar ?? undefined,
-        // Changepassword của thằng getDetail nó không có trả về nên là chúng ta sẽ lấy giá trị của thằng form đưa ra
-        // Form nó sẽ là cái gì thì dưới đây chúng ta sẽ lấy ra cái đấy
+        email,
         changePassword: form.getValues('changePassword'),
         password: form.getValues('password'),
-        confirmPassword: form.getValues('confirmPassword')
+        confirmPassword: form.getValues('confirmPassword'),
+        role
       })
     }
   }, [data, form])
 
-  const handleSubmitForm = async (values: UpdateEmployeeAccountBodyType) => {
-    if (updateEmployeeMutation.isPending) return
+  const onSubmit = async (values: UpdateEmployeeAccountBodyType) => {
+    if (updateAccountMutation.isPending) return
     try {
-      let body: UpdateEmployeeAccountBodyType & { id: number } = { id: id as number, ...values }
+      let body: UpdateEmployeeAccountBodyType & { id: number } = {
+        id: id as number,
+        ...values
+      }
       if (file) {
-        // Chúng ta chi dùng cái file này để mà chúng ta upload lên thôi
         const formData = new FormData()
         formData.append('file', file)
-        // CallAPi upload ảnh
-        const uploadImageResult = await uploadMutation.mutateAsync(formData)
+        const uploadImageResult = await uploadMediaMutation.mutateAsync(formData)
         const imageUrl = uploadImageResult.payload.data
-        // Nếu mà có file thì gán lại như này
         body = {
           ...body,
           avatar: imageUrl
         }
       }
-      const result = await updateEmployeeMutation.mutateAsync(body)
-      console.log(result)
+      const result = await updateAccountMutation.mutateAsync(body)
       toast({
         description: result.payload.message
       })
-      setFile(null)
-      setId(undefined)
+      reset()
       onSubmitSuccess && onSubmitSuccess()
-      // setOpen(false)
-      // router.refresh()
     } catch (error) {
       handleErrorApi({
         error,
@@ -113,8 +112,8 @@ const EditEmployee = ({
   }
 
   const reset = () => {
-    setFile(null)
     setId(undefined)
+    setFile(null)
   }
 
   return (
@@ -122,8 +121,6 @@ const EditEmployee = ({
       open={Boolean(id)}
       onOpenChange={(value) => {
         if (!value) {
-          // Nếu như trong cái dialog không có value thì reset() lại
-          // Khi mà nhấn vào nút X dialog thì cái function sẽ chạy
           reset()
         }
       }}
@@ -138,9 +135,7 @@ const EditEmployee = ({
             noValidate
             className='grid auto-rows-max items-start gap-4 md:gap-8'
             id='edit-employee-form'
-            onSubmit={form.handleSubmit(handleSubmitForm, (error) => {
-              console.log('Checkk error update account employee', error)
-            })}
+            onSubmit={form.handleSubmit(onSubmit, console.log)}
           >
             <div className='grid gap-4 py-4'>
               <FormField
@@ -211,6 +206,37 @@ const EditEmployee = ({
               />
               <FormField
                 control={form.control}
+                name='role'
+                render={({ field }) => (
+                  <FormItem>
+                    <div className='grid grid-cols-4 items-center justify-items-start gap-4'>
+                      <Label htmlFor='role'>Vai trò</Label>
+                      <div className='col-span-3 w-full space-y-2'>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder='Chọn vai trò' />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {RoleValues.map((role) => {
+                              if (role === Role.Guest) return null
+                              return (
+                                <SelectItem key={role} value={role}>
+                                  {role}
+                                </SelectItem>
+                              )
+                            })}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </div>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name='changePassword'
                 render={({ field }) => (
                   <FormItem>
@@ -270,5 +296,3 @@ const EditEmployee = ({
     </Dialog>
   )
 }
-
-export default EditEmployee
