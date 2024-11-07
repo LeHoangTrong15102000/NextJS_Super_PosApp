@@ -1,92 +1,94 @@
 import accountApiRequest from '@/apiRequests/account'
 import {
-  AccountResType,
-  ChangePasswordBodyType,
-  CreateEmployeeAccountBodyType,
   GetGuestListQueryParamsType,
-  UpdateEmployeeAccountBodyType,
-  UpdateMeBodyType
+  UpdateEmployeeAccountBodyType
 } from '@/schemaValidations/account.schema'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 export const useAccountMe = () => {
   return useQuery({
     queryKey: ['account-me'],
-    queryFn: () => accountApiRequest.getMeProfile()
+    queryFn: accountApiRequest.me
   })
 }
 
 export const useUpdateMeMutation = () => {
-  const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (body: UpdateMeBodyType) => accountApiRequest.updateMeProfile(body),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account-me'] })
-    }
+    mutationFn: accountApiRequest.updateMe
   })
 }
 
 export const useChangePasswordMutation = () => {
   return useMutation({
-    mutationFn: (body: ChangePasswordBodyType) => accountApiRequest.changePassword(body)
+    mutationFn: accountApiRequest.changePasswordV2
   })
 }
 
-// Get list Employee account
-export const useGetListAccountQuery = () => {
+export const useGetAccountList = () => {
   return useQuery({
-    queryKey: ['account-list'],
-    queryFn: () => accountApiRequest.getListAccount()
+    queryKey: ['accounts'],
+    queryFn: accountApiRequest.list
   })
 }
 
-// Get detail employee accountn
-export const useGetEmployeeQuery = ({ id, enabled }: { id: number; enabled: boolean }) => {
-  //  Truyền vào trong queryKey là id để mà react-query nó biết được là nó sẽ gọi tới thằng nào
-  // Để khi mà id thay đổi thì nó sẽ chạy lại cái queryFn
+export const useGetAccount = ({
+  id,
+  enabled
+}: {
+  id: number
+  enabled: boolean
+}) => {
   return useQuery({
-    queryKey: ['employee-account', id],
-    queryFn: () => accountApiRequest.getEmployeeDetail(id),
-    // Khi mà enabled là true thì nó sẽ gọi API còn false thì nó sẽ không gọi
+    queryKey: ['accounts', id],
+    queryFn: () => accountApiRequest.getEmployee(id),
     enabled
   })
 }
 
-// Add employee account
-export const useAddEmployeeMutation = () => {
+export const useAddAccountMutation = () => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (body: CreateEmployeeAccountBodyType) => accountApiRequest.addEmployee(body),
+    mutationFn: accountApiRequest.addEmployee,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account-list'] })
+      queryClient.invalidateQueries({
+        queryKey: ['accounts']
+      })
     }
   })
 }
 
-// Update employee account
-export const useUpdateEmployeeMutation = () => {
+export const useUpdateAccountMutation = () => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, ...body }: UpdateEmployeeAccountBodyType & { id: number }) =>
+    mutationFn: ({
+      id,
+      ...body
+    }: UpdateEmployeeAccountBodyType & { id: number }) =>
       accountApiRequest.updateEmployee(id, body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account-list'] })
+      queryClient.invalidateQueries({
+        queryKey: ['accounts'],
+        exact: true
+      })
     }
   })
 }
 
-// Delete employee account
-export const useDeleteEmployeeMutation = () => {
+export const useDeleteAccountMutation = () => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (employeeId: number) => accountApiRequest.deleteEmployee(employeeId),
+    mutationFn: accountApiRequest.deleteEmployee,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['account-list'] })
+      queryClient.invalidateQueries({
+        queryKey: ['accounts']
+      })
     }
   })
 }
 
-export const useGetGuestListQuery = (queryParams: GetGuestListQueryParamsType) => {
+export const useGetGuestListQuery = (
+  queryParams: GetGuestListQueryParamsType
+) => {
   return useQuery({
     queryFn: () => accountApiRequest.guestList(queryParams),
     queryKey: ['guests', queryParams]

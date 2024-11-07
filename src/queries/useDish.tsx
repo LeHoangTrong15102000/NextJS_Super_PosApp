@@ -1,20 +1,24 @@
-// Tạo query cho Dishes
-
 import dishApiRequest from '@/apiRequests/dish'
-import { CreateDishBodyType, UpdateDishBodyType } from '@/schemaValidations/dish.schema'
+import { UpdateDishBodyType } from '@/schemaValidations/dish.schema'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 export const useDishListQuery = () => {
   return useQuery({
-    queryKey: ['dishes-list'],
-    queryFn: () => dishApiRequest.getListDish()
+    queryKey: ['dishes'],
+    queryFn: dishApiRequest.list
   })
 }
 
-export const useGetDishQuery = ({ id, enabled }: { id: number; enabled: boolean }) => {
+export const useGetDishQuery = ({
+  id,
+  enabled
+}: {
+  id: number
+  enabled: boolean
+}) => {
   return useQuery({
-    queryKey: ['dishes-detail', id],
-    queryFn: () => dishApiRequest.getDishDetail(id),
+    queryKey: ['dishes', id],
+    queryFn: () => dishApiRequest.getDish(id),
     enabled
   })
 }
@@ -22,10 +26,10 @@ export const useGetDishQuery = ({ id, enabled }: { id: number; enabled: boolean 
 export const useAddDishMutation = () => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (body: CreateDishBodyType) => dishApiRequest.addDish(body),
+    mutationFn: dishApiRequest.add,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['dishes-list']
+        queryKey: ['dishes']
       })
     }
   })
@@ -35,10 +39,11 @@ export const useUpdateDishMutation = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, ...body }: UpdateDishBodyType & { id: number }) => dishApiRequest.updateDish(id, body),
+    mutationFn: ({ id, ...body }: UpdateDishBodyType & { id: number }) =>
+      dishApiRequest.updateDish(id, body),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['dishes-list'],
+        queryKey: ['dishes'],
         exact: true
       })
     }
@@ -49,10 +54,10 @@ export const useDeleteDishMutation = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (dishId: number) => dishApiRequest.deleteDish(dishId),
+    mutationFn: dishApiRequest.deleteDish,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['dishes-list']
+        queryKey: ['dishes']
       })
     }
   })

@@ -1,5 +1,9 @@
 import http from '@/lib/http'
-import { LogoutBodyType, RefreshTokenBodyType, RefreshTokenResType } from '@/schemaValidations/auth.schema'
+import {
+  LogoutBodyType,
+  RefreshTokenBodyType,
+  RefreshTokenResType
+} from '@/schemaValidations/auth.schema'
 import {
   GuestCreateOrdersBodyType,
   GuestCreateOrdersResType,
@@ -13,7 +17,8 @@ const guestApiRequest = {
     status: number
     payload: RefreshTokenResType
   }> | null,
-  sLogin: (body: GuestLoginBodyType) => http.post<GuestLoginResType>('/guest/auth/login', body),
+  sLogin: (body: GuestLoginBodyType) =>
+    http.post<GuestLoginResType>('/guest/auth/login', body),
   login: (body: GuestLoginBodyType) =>
     http.post<GuestLoginResType>('/api/guest/auth/login', body, {
       baseUrl: ''
@@ -35,20 +40,25 @@ const guestApiRequest = {
       }
     ),
   logout: () => http.post('/api/guest/auth/logout', null, { baseUrl: '' }), // client gọi đến route handler, không cần truyền AT và RT vào body vì AT và RT tự  động gửi thông qua cookie rồi
-  sRefreshToken: (body: RefreshTokenBodyType) => http.post<RefreshTokenResType>('/guest/auth/refresh-token', body),
+  sRefreshToken: (body: RefreshTokenBodyType) =>
+    http.post<RefreshTokenResType>('/guest/auth/refresh-token', body),
   async refreshToken() {
     if (this.refreshTokenRequest) {
       return this.refreshTokenRequest
     }
-    this.refreshTokenRequest = http.post<RefreshTokenResType>('/api/guest/auth/refresh-token', null, {
-      baseUrl: ''
-    })
+    this.refreshTokenRequest = http.post<RefreshTokenResType>(
+      '/api/guest/auth/refresh-token',
+      null,
+      {
+        baseUrl: ''
+      }
+    )
     const result = await this.refreshTokenRequest
     this.refreshTokenRequest = null
     return result
   },
-  createOrder: (body: GuestCreateOrdersBodyType) => http.post<GuestCreateOrdersResType>('/guest/orders', body),
-  // Lấy ra danh sách các món trong order
+  order: (body: GuestCreateOrdersBodyType) =>
+    http.post<GuestCreateOrdersResType>('/guest/orders', body),
   getOrderList: () => http.get<GuestGetOrdersResType>('/guest/orders')
 }
 

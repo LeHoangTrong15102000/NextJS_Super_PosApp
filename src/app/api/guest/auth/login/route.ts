@@ -1,4 +1,3 @@
-// Route handler cho login
 import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
 import { HttpError } from '@/lib/http'
@@ -6,9 +5,8 @@ import { GuestLoginBodyType } from '@/schemaValidations/guest.schema'
 import guestApiRequest from '@/apiRequests/guest'
 
 export async function POST(request: Request) {
-  // cái request chính là cái body mà ng dùng gửi lên
   const body = (await request.json()) as GuestLoginBodyType
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   try {
     const { payload } = await guestApiRequest.sLogin(body)
     const { accessToken, refreshToken } = payload.data

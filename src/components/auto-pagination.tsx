@@ -78,15 +78,26 @@ export default function AutoPagination({
         const pageNumber = index + 1
 
         // Điều kiện để return về ...
-        if (page <= RANGE * 2 + 1 && pageNumber > page + RANGE && pageNumber < pageSize - RANGE + 1) {
+        if (
+          page <= RANGE * 2 + 1 &&
+          pageNumber > page + RANGE &&
+          pageNumber < pageSize - RANGE + 1
+        ) {
           return renderDotAfter(index)
         } else if (page > RANGE * 2 + 1 && page < pageSize - RANGE * 2) {
           if (pageNumber < page - RANGE && pageNumber > RANGE) {
             return renderDotBefore(index)
-          } else if (pageNumber > page + RANGE && pageNumber < pageSize - RANGE + 1) {
+          } else if (
+            pageNumber > page + RANGE &&
+            pageNumber < pageSize - RANGE + 1
+          ) {
             return renderDotAfter(index)
           }
-        } else if (page >= pageSize - RANGE * 2 && pageNumber > RANGE && pageNumber < page - RANGE) {
+        } else if (
+          page >= pageSize - RANGE * 2 &&
+          pageNumber > RANGE &&
+          pageNumber < page - RANGE
+        ) {
           return renderDotBefore(index)
         }
         return (
@@ -110,7 +121,7 @@ export default function AutoPagination({
                   onClick(pageNumber)
                 }}
                 variant={pageNumber === page ? 'outline' : 'ghost'}
-                className='h-9 w-9 p-0'
+                className='w-9 h-9 p-0'
               >
                 {pageNumber}
               </Button>
@@ -150,7 +161,7 @@ export default function AutoPagination({
                 onClick(page - 1)
               }}
             >
-              <ChevronLeft className='h-5 w-5' /> Previous
+              <ChevronLeft className='w-5 h-5' /> Previous
             </Button>
           )}
         </PaginationItem>
@@ -184,7 +195,7 @@ export default function AutoPagination({
                 onClick(page + 1)
               }}
             >
-              Next <ChevronRight className='h-5 w-5' />
+              Next <ChevronRight className='w-5 h-5' />
             </Button>
           )}
         </PaginationItem>

@@ -1,6 +1,5 @@
 import orderApiRequest from '@/apiRequests/order'
 import {
-  CreateOrdersBodyType,
   GetOrdersQueryParamsType,
   PayGuestOrdersBodyType,
   UpdateOrderBodyType
@@ -18,15 +17,20 @@ export const useUpdateOrderMutation = () => {
   })
 }
 
-// lấy ra danh sách order ở trên hệ thống
 export const useGetOrderListQuery = (queryParams: GetOrdersQueryParamsType) => {
   return useQuery({
-    queryKey: ['orders-list', queryParams],
-    queryFn: () => orderApiRequest.getOrderList(queryParams)
+    queryFn: () => orderApiRequest.getOrderList(queryParams),
+    queryKey: ['orders', queryParams]
   })
 }
 
-export const useGetOrderDetailQuery = ({ id, enabled }: { id: number; enabled: boolean }) => {
+export const useGetOrderDetailQuery = ({
+  id,
+  enabled
+}: {
+  id: number
+  enabled: boolean
+}) => {
   return useQuery({
     queryFn: () => orderApiRequest.getOrderDetail(id),
     queryKey: ['orders', id],
@@ -42,8 +46,6 @@ export const usePayForGuestMutation = () => {
 
 export const useCreateOrderMutation = () => {
   return useMutation({
-    mutationFn: (body: CreateOrdersBodyType) => orderApiRequest.createOrders(body)
+    mutationFn: orderApiRequest.createOrders
   })
 }
-
-// Trong khi đó là gì mà chúng ta còn không biết nữa mà có khi là chúng ta không thể nào được luôn

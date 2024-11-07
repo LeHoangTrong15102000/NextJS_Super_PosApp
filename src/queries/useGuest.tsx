@@ -1,6 +1,4 @@
-// Query guest
 import guestApiRequest from '@/apiRequests/guest'
-import { GuestCreateOrdersBodyType } from '@/schemaValidations/guest.schema'
 import { useMutation, useQuery } from '@tanstack/react-query'
 
 export const useGuestLoginMutation = () => {
@@ -15,16 +13,15 @@ export const useGuestLogoutMutation = () => {
   })
 }
 
-// Lấy ra danh sách order
-export const useGuestGetOrderListQuery = () => {
-  return useQuery({
-    queryKey: ['guest-orders-list'],
-    queryFn: () => guestApiRequest.getOrderList()
+export const useGuestOrderMutation = () => {
+  return useMutation({
+    mutationFn: guestApiRequest.order
   })
 }
 
-export const useGuestOrderMutation = () => {
-  return useMutation({
-    mutationFn: (body: GuestCreateOrdersBodyType) => guestApiRequest.createOrder(body)
+export const useGuestGetOrderListQuery = () => {
+  return useQuery({
+    queryFn: guestApiRequest.getOrderList,
+    queryKey: ['guest-orders']
   })
 }

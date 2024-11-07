@@ -1,12 +1,17 @@
+import NextBundleAnalyzer from '@next/bundle-analyzer'
+import createNextIntlPlugin from 'next-intl/plugin'
+
+const withNextIntl = createNextIntlPlugin()
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Sử dụng cho các đường dẫn hình ảnh ở localhost
   images: {
     remotePatterns: [
       {
-        protocol: 'http',
         hostname: 'localhost',
-        port: '4000',
+        pathname: '/**'
+      },
+      {
+        hostname: 'api-bigboy.duthanhduoc.com',
         pathname: '/**'
       },
       {
@@ -15,7 +20,8 @@ const nextConfig = {
       }
     ]
   }
-  // reactStrictMode: false
 }
-
-export default nextConfig
+const withBundleAnalyzer = NextBundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true'
+})
+export default withNextIntl(withBundleAnalyzer(nextConfig))

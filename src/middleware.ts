@@ -1,76 +1,105 @@
-import { decodeToken, removeTokensFromLocalStorage } from '@/lib/utils'
-import { cookies } from 'next/headers'
+import { Role } from '@/constants/type'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { Role } from './constants/type'
+import jwt from 'jsonwebtoken'
+import { TokenPayload } from '@/types/jwt.types'
+import createMiddleware from 'next-intl/middleware'
+import { defaultLocale } from '@/config'
+import { routing } from './i18n/routing'
 
-const managePaths = ['/manage']
-const guestPaths = ['/guest']
-const onlyOwnerPaths = ['/manage/accounts']
+const decodeToken = (token: string) => {
+  return jwt.decode(token) as TokenPayload
+}
+
+const managePaths = ['/vi/manage', '/en/manage']
+const guestPaths = ['/vi/guest', '/en/guest']
+const onlyOwnerPaths = ['/vi/manage/accounts', '/en/manage/accounts']
 const privatePaths = [...managePaths, ...guestPaths]
-const unAuthPaths = ['/login']
+const unAuthPaths = ['/vi/login', '/en/login']
+const loginPaths = ['/vi/login', '/en/login']
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
-  // Url người dùng vừa mới enter vào cái trình duyệt
-  const { pathname } = request.nextUrl
+  const handleI18nRouting = createMiddleware(routing)
+  const response = handleI18nRouting(request)
+  const { pathname, searchParams } = request.nextUrl
   // pathname: /manage/dashboard
-  // const cookieStore = cookies()
   const accessToken = request.cookies.get('accessToken')?.value
   const refreshToken = request.cookies.get('refreshToken')?.value
-  // const refreshToken = cookieStore.get('refreshToken')?.value
-
-  // Chưa đăng nhập thì không cho vào private paths
-  // Chỗ này chúng ta chưa xử lý accessToken nên là không để AT vào đây được, vì mà để vào đây thì nó giống như trường hợp là đang dùng mà hét hạn AT
-  // Ở đây phải check là ko có RT mới là chưa đăng nhập vì khi mà để AT thì khi mà AT nó hết hạn mà nó đá ng dùng về login thì không đúng lắm vì chúng ta chưa làm gia hạn AT
-  // Và cái case cũng đúng cho trường hợp là khi mà RT hết hạn thì bắt buộc người dùng phải đăng nhập lại
-
-  // 1.  Chưa đăng nhập thì không cho vào private paths
+  const locale = request.cookies.get('NEXT_LOCALE')?.value ?? defaultLocale
+  // 1. Chưa đăng nhập thì không cho vào private paths
   if (privatePaths.some((path) => pathname.startsWith(path)) && !refreshToken) {
-    const url = new URL('/login', request.url)
+    const url = new URL(`/${locale}/login`, request.url)
     url.searchParams.set('clearTokens', 'true')
-    // const clearTokens = removeTokensFromLocalStorage()
     return NextResponse.redirect(url)
+    // response.headers.set('x-middleware-rewrite', url.toString())
+    // return response
   }
-
-  // 2. Trương hợp đã đăng nhập rồi
+  // 2. Trường hợp đã đăng nhập
   if (refreshToken) {
-    // 2.1 Nếu có tình vào trang login sẽ bị redirect về trang chủ
-    if (unAuthPaths.some((path) => pathname.startsWith(path)) && refreshToken) {
-      return NextResponse.redirect(new URL('/', request.url))
+    // 2.1 Nếu cố tình vào trang login sẽ redirect về trang chủ
+    if (unAuthPaths.some((path) => pathname.startsWith(path))) {
+      if (
+        loginPaths.some((path) => pathname.startsWith(path)) &&
+        searchParams.get('accessToken')
+      ) {
+        return response
+      }
+      return NextResponse.redirect(new URL(`/${locale}`, request.url))
+      // response.headers.set(
+      //   'x-middleware-rewrite',
+      //   new URL('/en', request.url).toString()
+      // )
+      // return response
     }
 
-    // Trường hợp đăng nhập rồi, nhưng accessToken lại hết hạn và cũng có thể là refreshToken
-    // Do chưa xử lý refreshToken nên khi mà AT hết hạn và còn RT thì cho người dùng logout
-    // 2.2 Nhưng accessToken lại hết hạn
-    if (privatePaths.some((path) => pathname.startsWith(path)) && !accessToken && refreshToken) {
-      // Tạo ra url refresh-token
-      const url = new URL('/refresh-token', request.url)
+    // 2.2 Nhưng access token lại hết hạn
+    if (
+      privatePaths.some((path) => pathname.startsWith(path)) &&
+      !accessToken
+    ) {
+      const url = new URL(`/${locale}/refresh-token`, request.url)
       url.searchParams.set('refreshToken', refreshToken)
-      // Cần gửi cái pathname để mà sau khi mà nó refreshToken thì sẽ quay lại cái pathname hồi nảy
       url.searchParams.set('redirect', pathname)
-      console.log('check đường dẫn url')
       return NextResponse.redirect(url)
+      // response.headers.set('x-middleware-rewrite', url.toString())
+      // return response
     }
 
-    // 2.3 Vào không đúng role thì redirect về trang chủ
+    // 2.3 Vào không đúng role, redirect về trang chủ
     const role = decodeToken(refreshToken).role
-    // guest nhưng mà cố vào trang manage của owner
-    const isGuestGoToManagePath = role === Role.Guest && managePaths.some((path) => pathname.startsWith(path))
-    // owner nhưng mà cố vào trang của guest
-    const isNotGuestGoToGuestPath = role !== Role.Guest && guestPaths.some((path) => pathname.startsWith(path))
-    // Không phải owner nhưng mà lại cố tình truy cập vào route của owner
-    const isNotOwnerGoToOwnerPath = role !== Role.Owner && onlyOwnerPaths.some((path) => pathname.startsWith(path))
-    if (isGuestGoToManagePath || isNotGuestGoToGuestPath || isNotOwnerGoToOwnerPath) {
-      return NextResponse.redirect(new URL('/', request.url))
+    // Guest nhưng cố vào route owner
+    const isGuestGoToManagePath =
+      role === Role.Guest &&
+      managePaths.some((path) => pathname.startsWith(path))
+    // Không phải Guest nhưng cố vào route guest
+    const isNotGuestGoToGuestPath =
+      role !== Role.Guest &&
+      guestPaths.some((path) => pathname.startsWith(path))
+    // Không phải Owner nhưng cố tình truy cập vào các route dành cho owner
+    const isNotOwnerGoToOwnerPath =
+      role !== Role.Owner &&
+      onlyOwnerPaths.some((path) => pathname.startsWith(path))
+    if (
+      isGuestGoToManagePath ||
+      isNotGuestGoToGuestPath ||
+      isNotOwnerGoToOwnerPath
+    ) {
+      return NextResponse.redirect(new URL(`/${locale}`, request.url))
+      // response.headers.set(
+      //   'x-middleware-rewrite',
+      //   new URL('/', request.url).toString()
+      // )
+      // return response
     }
 
-    return NextResponse.next()
+    // return NextResponse.next()
+    return response
   }
+  return response
 }
 
 // See "Matching Paths" below to learn more
-// middleware này sẽ áp dụng cho những path đươc khai báo bên dưới
 export const config = {
-  matcher: ['/manage/:path*', '/guest/:path*', '/login']
+  matcher: ['/', '/(vi|en)/:path*']
 }
