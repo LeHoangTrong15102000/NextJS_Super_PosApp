@@ -19,7 +19,12 @@ const nextConfig: NextConfig = {
         pathname: '/**'
       }
     ]
-  }
+  },
+  webpack: (config, { isServer }) => {
+    // Ghi ra cấu hình Webpack trong log khi build
+    console.log('Webpack config:', config);
+    return config;
+  },
 }
 const withBundleAnalyzer = NextBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true'

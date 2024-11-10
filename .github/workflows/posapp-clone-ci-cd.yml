@@ -16,13 +16,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      
+      - name: Clean up old node_modules and lock file
+        run: |
+          rm -rf node_modules
+          rm -f package-lock.json
+      
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
+      
+      - name: Install Dependencies with Legacy Peer Deps
+        run: npm install --legacy-peer-deps || npm install --legacy-peer-deps --force
+
+      - name: Build Project Locally
+        run: npm run build
+
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Install Dependencies with Legacy Peer Deps
-        run: npm install --legacy-peer-deps
-      - name: Build Project Artifacts
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+      
       - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prebuilt --prod
