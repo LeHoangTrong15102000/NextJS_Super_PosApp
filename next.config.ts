@@ -1,6 +1,7 @@
 import NextBundleAnalyzer from '@next/bundle-analyzer'
 import createNextIntlPlugin from 'next-intl/plugin'
 import type { NextConfig } from 'next'
+import path from 'path'
 
 const withNextIntl = createNextIntlPlugin()
 const nextConfig: NextConfig = {
@@ -20,11 +21,10 @@ const nextConfig: NextConfig = {
       }
     ]
   },
-  webpack: (config, { isServer }) => {
-    // Ghi ra cấu hình Webpack trong log khi build
-    console.log('Webpack config:', config);
+  webpack: (config) => {
+    config.resolve.alias['@'] = path.resolve(__dirname, 'src');
     return config;
-  },
+  }
 }
 const withBundleAnalyzer = NextBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true'
