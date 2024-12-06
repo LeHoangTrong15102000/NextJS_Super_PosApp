@@ -1,7 +1,6 @@
 import NextBundleAnalyzer from '@next/bundle-analyzer'
 import createNextIntlPlugin from 'next-intl/plugin'
 import type { NextConfig } from 'next'
-import path from 'path'
 
 const withNextIntl = createNextIntlPlugin()
 const nextConfig: NextConfig = {
@@ -20,10 +19,6 @@ const nextConfig: NextConfig = {
         pathname: '/**'
       }
     ]
-  },
-  webpack: (config) => {
-    config.resolve.alias['@'] = path.resolve(__dirname, 'src');
-    return config;
   }
 }
 const withBundleAnalyzer = NextBundleAnalyzer({

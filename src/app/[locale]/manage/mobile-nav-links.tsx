@@ -2,7 +2,14 @@
 import menuItems from '@/app/[locale]/manage/menuItems'
 import { useAppStore } from '@/components/app-provider'
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger
+} from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { Package2, PanelLeft } from 'lucide-react'
 import { Link, usePathname } from '@/i18n/routing'
@@ -19,6 +26,10 @@ export default function MobileNavLinks() {
         </Button>
       </SheetTrigger>
       <SheetContent side='left' className='sm:max-w-xs'>
+        <SheetHeader className='sr-only'>
+          <SheetTitle />
+          <SheetDescription />
+        </SheetHeader>
         <nav className='grid gap-6 text-lg font-medium'>
           <Link
             href='#'

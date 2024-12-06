@@ -51,9 +51,9 @@ export default async function Layout(
             </Button>
           </SheetTrigger>
           <SheetContent side='left'>
-            <SheetHeader className='hidden'>
-              <SheetTitle></SheetTitle>
-              <SheetDescription></SheetDescription>
+            <SheetHeader className='sr-only'>
+              <SheetTitle />
+              <SheetDescription />
             </SheetHeader>
             <nav className='grid gap-6 text-lg font-medium'>
               <Link
