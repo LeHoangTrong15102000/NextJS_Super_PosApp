@@ -2,14 +2,7 @@
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import RefreshToken from '@/components/refresh-token'
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState
-} from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import {
   decodeToken,
   generateSocketInstace,
@@ -28,7 +21,13 @@ import { create } from 'zustand'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false
+      staleTime: 5 * 60 * 1000, // 5 phút
+      gcTime: 10 * 60 * 1000, // 10 phút (thay thế cacheTime deprecated)
+      refetchOnWindowFocus: false,
+      retry: (failureCount, error: any) => {
+        if (error?.status === 401) return false
+        return failureCount < 2
+      }
     }
   }
 })
@@ -71,11 +70,7 @@ export const useAppStore = create<AppStoreType>((set) => ({
 // export const useAppContext = () => {
 //   return useContext(AppContext)
 // }
-export default function AppProvider({
-  children
-}: {
-  children: React.ReactNode
-}) {
+export default function AppProvider({ children }: { children: React.ReactNode }) {
   const setRole = useAppStore((state) => state.setRole)
   const setSocket = useAppStore((state) => state.setSocket)
   // const [socket, setSocket] = useState<Socket | undefined>()

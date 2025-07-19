@@ -5,11 +5,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { ThemeProvider } from '@/components/theme-provider'
 import AppProvider from '@/components/app-provider'
 import { NextIntlClientProvider } from 'next-intl'
-import {
-  getMessages,
-  getTranslations,
-  setRequestLocale
-} from 'next-intl/server'
+import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server'
 import { Locale } from '@/config'
 import NextTopLoader from 'nextjs-toploader'
 import Footer from '@/components/footer'
@@ -22,9 +18,7 @@ const fontSans = FontSans({
   subsets: ['latin'],
   variable: '--font-sans'
 })
-export async function generateMetadata(props: {
-  params: Promise<{ locale: Locale }>
-}) {
+export async function generateMetadata(props: { params: Promise<{ locale: Locale }> }) {
   const params = await props.params
 
   const { locale } = params
@@ -68,21 +62,11 @@ export default async function RootLayout(
   const messages = await getMessages()
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body
-        className={cn(
-          'min-h-screen bg-background font-sans antialiased',
-          fontSans.variable
-        )}
-      >
+      <body className={cn('min-h-screen bg-background font-sans antialiased', fontSans.variable)}>
         <NextTopLoader showSpinner={false} color='hsl(var(--foreground))' />
         <NextIntlClientProvider messages={messages}>
           <AppProvider>
-            <ThemeProvider
-              attribute='class'
-              defaultTheme='system'
-              enableSystem
-              disableTransitionOnChange
-            >
+            <ThemeProvider attribute='class' defaultTheme='system' enableSystem disableTransitionOnChange>
               {children}
               <Footer />
               <Toaster />

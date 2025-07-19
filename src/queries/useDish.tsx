@@ -9,13 +9,7 @@ export const useDishListQuery = () => {
   })
 }
 
-export const useGetDishQuery = ({
-  id,
-  enabled
-}: {
-  id: number
-  enabled: boolean
-}) => {
+export const useGetDishQuery = ({ id, enabled }: { id: number; enabled: boolean }) => {
   return useQuery({
     queryKey: ['dishes', id],
     queryFn: () => dishApiRequest.getDish(id),
@@ -39,12 +33,15 @@ export const useUpdateDishMutation = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, ...body }: UpdateDishBodyType & { id: number }) =>
-      dishApiRequest.updateDish(id, body),
-    onSuccess: () => {
+    mutationFn: ({ id, ...body }: UpdateDishBodyType & { id: number }) => dishApiRequest.updateDish(id, body),
+    onSuccess: (data, variables) => {
+      // Update specific dish in cache
+      queryClient.setQueryData(['dishes', variables.id], data)
+
+      // Invalidate list only
       queryClient.invalidateQueries({
         queryKey: ['dishes'],
-        exact: true
+        predicate: (query) => query.queryKey.length === 1
       })
     }
   })

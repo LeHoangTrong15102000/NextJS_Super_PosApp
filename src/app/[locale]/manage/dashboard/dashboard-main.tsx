@@ -1,7 +1,6 @@
 'use client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { RevenueLineChart } from '@/app/[locale]/manage/dashboard/revenue-line-chart'
-import { DishBarChart } from '@/app/[locale]/manage/dashboard/dish-bar-chart'
+import dynamic from 'next/dynamic'
 import { formatCurrency } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -9,8 +8,31 @@ import { endOfDay, format, startOfDay } from 'date-fns'
 import { useState } from 'react'
 import { useDashboardIndicator } from '@/queries/useIndicator'
 
+// Dynamic imports cho chart components
+const RevenueLineChart = dynamic(
+  () => import('./revenue-line-chart').then((mod) => ({ default: mod.RevenueLineChart })),
+  {
+    loading: () => (
+      <div className='h-80 bg-gray-100 rounded animate-pulse flex items-center justify-center'>
+        <span className='text-gray-500'>Đang tải biểu đồ...</span>
+      </div>
+    ),
+    ssr: false
+  }
+)
+
+const DishBarChart = dynamic(() => import('./dish-bar-chart').then((mod) => ({ default: mod.DishBarChart })), {
+  loading: () => (
+    <div className='h-80 bg-gray-100 rounded animate-pulse flex items-center justify-center'>
+      <span className='text-gray-500'>Đang tải biểu đồ...</span>
+    </div>
+  ),
+  ssr: false
+})
+
 const initFromDate = startOfDay(new Date())
 const initToDate = endOfDay(new Date())
+
 export default function DashboardMain() {
   const [fromDate, setFromDate] = useState(initFromDate)
   const [toDate, setToDate] = useState(initToDate)
@@ -59,9 +81,7 @@ export default function DashboardMain() {
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Tổng doanh thu
-            </CardTitle>
+            <CardTitle className='text-sm font-medium'>Tổng doanh thu</CardTitle>
             <svg
               xmlns='http://www.w3.org/2000/svg'
               viewBox='0 0 24 24'
@@ -126,9 +146,7 @@ export default function DashboardMain() {
         </Card>
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Bàn đang phục vụ
-            </CardTitle>
+            <CardTitle className='text-sm font-medium'>Bàn đang phục vụ</CardTitle>
             <svg
               xmlns='http://www.w3.org/2000/svg'
               viewBox='0 0 24 24'

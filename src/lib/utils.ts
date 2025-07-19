@@ -52,16 +52,12 @@ export const handleErrorApi = ({
 
 const isBrowser = typeof window !== 'undefined'
 
-export const getAccessTokenFromLocalStorage = () =>
-  isBrowser ? localStorage.getItem('accessToken') : null
+export const getAccessTokenFromLocalStorage = () => (isBrowser ? localStorage.getItem('accessToken') : null)
 
-export const getRefreshTokenFromLocalStorage = () =>
-  isBrowser ? localStorage.getItem('refreshToken') : null
-export const setAccessTokenToLocalStorage = (value: string) =>
-  isBrowser && localStorage.setItem('accessToken', value)
+export const getRefreshTokenFromLocalStorage = () => (isBrowser ? localStorage.getItem('refreshToken') : null)
+export const setAccessTokenToLocalStorage = (value: string) => isBrowser && localStorage.setItem('accessToken', value)
 
-export const setRefreshTokenToLocalStorage = (value: string) =>
-  isBrowser && localStorage.setItem('refreshToken', value)
+export const setRefreshTokenToLocalStorage = (value: string) => isBrowser && localStorage.setItem('refreshToken', value)
 export const removeTokensFromLocalStorage = () => {
   isBrowser && localStorage.removeItem('accessToken')
   isBrowser && localStorage.removeItem('refreshToken')
@@ -92,18 +88,11 @@ export const checkAndRefreshToken = async (param?: {
   // thì mình sẽ kiểm tra còn 1/3 thời gian (3s) thì mình sẽ cho refresh token lại
   // Thời gian còn lại sẽ tính dựa trên công thức: decodedAccessToken.exp - now
   // Thời gian hết hạn của access token dựa trên công thức: decodedAccessToken.exp - decodedAccessToken.iat
-  if (
-    param?.force ||
-    decodedAccessToken.exp - now <
-      (decodedAccessToken.exp - decodedAccessToken.iat) / 3
-  ) {
+  if (param?.force || decodedAccessToken.exp - now < (decodedAccessToken.exp - decodedAccessToken.iat) / 3) {
     // Gọi API refresh token
     try {
       const role = decodedRefreshToken.role
-      const res =
-        role === Role.Guest
-          ? await guestApiRequest.refreshToken()
-          : await authApiRequest.refreshToken()
+      const res = role === Role.Guest ? await guestApiRequest.refreshToken() : await authApiRequest.refreshToken()
       setAccessTokenToLocalStorage(res.payload.data.accessToken)
       setRefreshTokenToLocalStorage(res.payload.data.refreshToken)
       param?.onSuccess && param.onSuccess()
@@ -120,9 +109,7 @@ export const formatCurrency = (number: number) => {
   }).format(number)
 }
 
-export const getVietnameseDishStatus = (
-  status: (typeof DishStatus)[keyof typeof DishStatus]
-) => {
+export const getVietnameseDishStatus = (status: (typeof DishStatus)[keyof typeof DishStatus]) => {
   switch (status) {
     case DishStatus.Available:
       return 'Có sẵn'
@@ -133,9 +120,7 @@ export const getVietnameseDishStatus = (
   }
 }
 
-export const getVietnameseOrderStatus = (
-  status: (typeof OrderStatus)[keyof typeof OrderStatus]
-) => {
+export const getVietnameseOrderStatus = (status: (typeof OrderStatus)[keyof typeof OrderStatus]) => {
   switch (status) {
     case OrderStatus.Delivered:
       return 'Đã phục vụ'
@@ -150,9 +135,7 @@ export const getVietnameseOrderStatus = (
   }
 }
 
-export const getVietnameseTableStatus = (
-  status: (typeof TableStatus)[keyof typeof TableStatus]
-) => {
+export const getVietnameseTableStatus = (status: (typeof TableStatus)[keyof typeof TableStatus]) => {
   switch (status) {
     case TableStatus.Available:
       return 'Có sẵn'
@@ -163,20 +146,8 @@ export const getVietnameseTableStatus = (
   }
 }
 
-export const getTableLink = ({
-  token,
-  tableNumber
-}: {
-  token: string
-  tableNumber: number
-}) => {
-  return (
-    envConfig.NEXT_PUBLIC_URL +
-    `/${defaultLocale}/tables/` +
-    tableNumber +
-    '?token=' +
-    token
-  )
+export const getTableLink = ({ token, tableNumber }: { token: string; tableNumber: number }) => {
+  return envConfig.NEXT_PUBLIC_URL + `/${defaultLocale}/tables/` + tableNumber + '?token=' + token
 }
 
 export const decodeToken = (token: string) => {
@@ -192,20 +163,15 @@ export function removeAccents(str: string) {
 }
 
 export const simpleMatchText = (fullText: string, matchText: string) => {
-  return removeAccents(fullText.toLowerCase()).includes(
-    removeAccents(matchText.trim().toLowerCase())
-  )
+  return removeAccents(fullText.toLowerCase()).includes(removeAccents(matchText.trim().toLowerCase()))
 }
 
 export const formatDateTimeToLocaleString = (date: string | Date) => {
-  return format(
-    date instanceof Date ? date : new Date(date),
-    'HH:mm:ss dd/MM/yyyy'
-  )
+  return format(date instanceof Date ? date : new Date(date), 'HH:mm:ss dd/MM/yyyy')
 }
 
 export const formatDateTimeToTimeString = (date: string | Date) => {
-  return format(date instanceof Date ? date : new Date(date), 'HH:mm:ss')
+  return format(date instanceof Date ? date : new Date(date), 'HH:mm')
 }
 
 export const generateSocketInstace = (accessToken: string) => {
@@ -237,9 +203,15 @@ export const wrapServerApi = async <T>(fn: () => Promise<T>) => {
 }
 
 export const generateSlugUrl = ({ name, id }: { name: string; id: number }) => {
-  return `${slugify(name)}-i.${id}`
+  if (!name.trim()) return id.toString()
+  return `${slugify(name, { lower: true, locale: 'vi' })}-${id}`
 }
 
 export const getIdFromSlugUrl = (slug: string) => {
-  return Number(slug.split('-i.')[1])
+  if (!slug) return NaN
+  const parts = slug.split('-')
+  const lastPart = parts[parts.length - 1]
+  if (!lastPart) return NaN
+  const id = Number(lastPart)
+  return isNaN(id) ? NaN : id
 }

@@ -42,7 +42,10 @@ export async function POST(request: Request) {
     })
     return Response.json(payload)
   } catch (error: any) {
-    console.log(error)
+    // Log only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Refresh token error:', error)
+    }
     return Response.json(
       {
         message: error.message ?? 'Có lỗi xảy ra'

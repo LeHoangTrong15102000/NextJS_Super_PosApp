@@ -8,9 +8,7 @@ import { setRequestLocale } from 'next-intl/server'
 import envConfig, { Locale } from '@/config'
 import { htmlToTextForDescription } from '@/lib/server-utils'
 
-export async function generateMetadata(props: {
-  params: Promise<{ locale: Locale }>
-}) {
+export async function generateMetadata(props: { params: Promise<{ locale: Locale }> }) {
   const params = await props.params
 
   const { locale } = params
@@ -27,9 +25,7 @@ export async function generateMetadata(props: {
   }
 }
 
-export default async function Home(props: {
-  params: Promise<{ locale: string }>
-}) {
+export default async function Home(props: { params: Promise<{ locale: string }> }) {
   const params = await props.params
 
   const { locale } = params
@@ -54,15 +50,14 @@ export default async function Home(props: {
           src='/banner.png'
           width={400}
           height={200}
-          quality={80}
-          loading='lazy'
+          quality={85}
+          priority={true}
           alt='Banner'
           className='absolute top-0 left-0 w-full h-full object-cover'
+          sizes='100vw'
         />
         <div className='z-20 relative py-10 md:py-20 px-4 sm:px-10 md:px-20'>
-          <h1 className='text-center text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold'>
-            {t('title')}
-          </h1>
+          <h1 className='text-center text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold'>{t('title')}</h1>
           <p className='text-center text-sm sm:text-base mt-4'>{t('slogan')}</p>
         </div>
       </section>

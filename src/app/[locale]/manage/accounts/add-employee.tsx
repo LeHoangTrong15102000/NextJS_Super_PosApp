@@ -11,10 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  CreateEmployeeAccountBody,
-  CreateEmployeeAccountBodyType
-} from '@/schemaValidations/account.schema'
+import { CreateEmployeeAccountBody, CreateEmployeeAccountBodyType } from '@/schemaValidations/account.schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { PlusCircle, Upload } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
@@ -63,9 +60,7 @@ export default function AddEmployee() {
       if (file) {
         const formData = new FormData()
         formData.append('file', file)
-        const uploadImageResult = await uploadMediaMutation.mutateAsync(
-          formData
-        )
+        const uploadImageResult = await uploadMediaMutation.mutateAsync(formData)
         const imageUrl = uploadImageResult.payload.data
         body = {
           ...values,
@@ -90,17 +85,13 @@ export default function AddEmployee() {
       <DialogTrigger asChild>
         <Button size='sm' className='h-7 gap-1'>
           <PlusCircle className='h-3.5 w-3.5' />
-          <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>
-            Tạo tài khoản
-          </span>
+          <span className='sr-only sm:not-sr-only sm:whitespace-nowrap'>Tạo tài khoản</span>
         </Button>
       </DialogTrigger>
       <DialogContent className='sm:max-w-[600px] max-h-screen overflow-auto'>
         <DialogHeader>
           <DialogTitle>Tạo tài khoản</DialogTitle>
-          <DialogDescription>
-            Các trường tên, email, mật khẩu là bắt buộc
-          </DialogDescription>
+          <DialogDescription>Các trường tên, email, mật khẩu là bắt buộc</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
@@ -121,9 +112,7 @@ export default function AddEmployee() {
                     <div className='flex gap-2 items-start justify-start'>
                       <Avatar className='aspect-square w-[100px] h-[100px] rounded-md object-cover'>
                         <AvatarImage src={previewAvatarFromFile} />
-                        <AvatarFallback className='rounded-none'>
-                          {name || 'Avatar'}
-                        </AvatarFallback>
+                        <AvatarFallback className='rounded-none'>{name || 'Avatar'}</AvatarFallback>
                       </Avatar>
                       <input
                         type='file'
@@ -189,12 +178,7 @@ export default function AddEmployee() {
                     <div className='grid grid-cols-4 items-center justify-items-start gap-4'>
                       <Label htmlFor='password'>Mật khẩu</Label>
                       <div className='col-span-3 w-full space-y-2'>
-                        <Input
-                          id='password'
-                          className='w-full'
-                          type='password'
-                          {...field}
-                        />
+                        <Input id='password' className='w-full' type='password' {...field} />
                         <FormMessage />
                       </div>
                     </div>
@@ -209,12 +193,7 @@ export default function AddEmployee() {
                     <div className='grid grid-cols-4 items-center justify-items-start gap-4'>
                       <Label htmlFor='confirmPassword'>Xác nhận mật khẩu</Label>
                       <div className='col-span-3 w-full space-y-2'>
-                        <Input
-                          id='confirmPassword'
-                          className='w-full'
-                          type='password'
-                          {...field}
-                        />
+                        <Input id='confirmPassword' className='w-full' type='password' {...field} />
                         <FormMessage />
                       </div>
                     </div>

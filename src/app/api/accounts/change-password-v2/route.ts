@@ -18,10 +18,7 @@ export async function PUT(request: Request) {
     )
   }
   try {
-    const { payload } = await accountApiRequest.sChangePasswordV2(
-      accessToken,
-      body
-    )
+    const { payload } = await accountApiRequest.sChangePasswordV2(accessToken, body)
 
     const decodedAccessToken = jwt.decode(payload.data.accessToken) as {
       exp: number
@@ -45,7 +42,9 @@ export async function PUT(request: Request) {
     })
     return Response.json(payload)
   } catch (error: any) {
-    console.log(error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Change password error:', error)
+    }
     return Response.json(
       {
         message: error.message ?? 'Có lỗi xảy ra'

@@ -3,13 +3,7 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { ColumnDef } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,20 +14,11 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { GetOrdersResType } from '@/schemaValidations/order.schema'
 import { useContext } from 'react'
-import {
-  formatCurrency,
-  formatDateTimeToLocaleString,
-  getVietnameseOrderStatus,
-  simpleMatchText
-} from '@/lib/utils'
+import { formatCurrency, formatDateTimeToLocaleString, getVietnameseOrderStatus, simpleMatchText } from '@/lib/utils'
 import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
 import { OrderStatus, OrderStatusValues } from '@/constants/type'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { OrderTableContext } from '@/app/[locale]/manage/orders/order-table'
 import OrderGuestDetail from '@/app/[locale]/manage/orders/order-guest-detail'
 
@@ -45,10 +30,7 @@ const orderTableColumns: ColumnDef<OrderItem>[] = [
     cell: ({ row }) => <div>{row.getValue('tableNumber')}</div>,
     filterFn: (row, columnId, filterValue: string) => {
       if (filterValue === undefined) return true
-      return simpleMatchText(
-        String(row.getValue(columnId)),
-        String(filterValue)
-      )
+      return simpleMatchText(String(row.getValue(columnId)), String(filterValue))
     }
   },
   {
@@ -73,10 +55,7 @@ const orderTableColumns: ColumnDef<OrderItem>[] = [
                 </div>
               </PopoverTrigger>
               <PopoverContent className='w-[320px] sm:w-[440px]'>
-                <OrderGuestDetail
-                  guest={guest}
-                  orders={orderObjectByGuestId[guest.id]}
-                />
+                <OrderGuestDetail guest={guest} orders={orderObjectByGuestId[guest.id]} />
               </PopoverContent>
             </Popover>
           )}
@@ -85,10 +64,7 @@ const orderTableColumns: ColumnDef<OrderItem>[] = [
     },
     filterFn: (row, columnId, filterValue: string) => {
       if (filterValue === undefined) return true
-      return simpleMatchText(
-        row.original.guest?.name ?? 'Đã bị xóa',
-        String(filterValue)
-      )
+      return simpleMatchText(row.original.guest?.name ?? 'Đã bị xóa', String(filterValue))
     }
   },
   {
@@ -116,12 +92,8 @@ const orderTableColumns: ColumnDef<OrderItem>[] = [
                 className='rounded-md object-cover w-[100px] h-[100px]'
               />
               <div className='space-y-1 text-sm'>
-                <h3 className='font-semibold'>
-                  {row.original.dishSnapshot.name}
-                </h3>
-                <div className='italic'>
-                  {formatCurrency(row.original.dishSnapshot.price)}
-                </div>
+                <h3 className='font-semibold'>{row.original.dishSnapshot.name}</h3>
+                <div className='italic'>{formatCurrency(row.original.dishSnapshot.price)}</div>
                 <div>{row.original.dishSnapshot.description}</div>
               </div>
             </div>
@@ -135,11 +107,7 @@ const orderTableColumns: ColumnDef<OrderItem>[] = [
               x{row.original.quantity}
             </Badge>
           </div>
-          <span className='italic'>
-            {formatCurrency(
-              row.original.dishSnapshot.price * row.original.quantity
-            )}
-          </span>
+          <span className='italic'>{formatCurrency(row.original.dishSnapshot.price * row.original.quantity)}</span>
         </div>
       </div>
     )
@@ -149,9 +117,7 @@ const orderTableColumns: ColumnDef<OrderItem>[] = [
     header: 'Trạng thái',
     cell: function Cell({ row }) {
       const { changeStatus } = useContext(OrderTableContext)
-      const changeOrderStatus = async (
-        status: (typeof OrderStatusValues)[number]
-      ) => {
+      const changeOrderStatus = async (status: (typeof OrderStatusValues)[number]) => {
         changeStatus({
           orderId: row.original.id,
           dishId: row.original.dishSnapshot.dishId!,
@@ -191,13 +157,9 @@ const orderTableColumns: ColumnDef<OrderItem>[] = [
     header: () => <div>Tạo/Cập nhật</div>,
     cell: ({ row }) => (
       <div className='space-y-2 text-sm'>
+        <div className='flex items-center space-x-4'>{formatDateTimeToLocaleString(row.getValue('createdAt'))}</div>
         <div className='flex items-center space-x-4'>
-          {formatDateTimeToLocaleString(row.getValue('createdAt'))}
-        </div>
-        <div className='flex items-center space-x-4'>
-          {formatDateTimeToLocaleString(
-            row.original.updatedAt as unknown as string
-          )}
+          {formatDateTimeToLocaleString(row.original.updatedAt as unknown as string)}
         </div>
       </div>
     )

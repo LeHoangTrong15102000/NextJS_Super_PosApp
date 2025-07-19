@@ -28,8 +28,7 @@ const SearchParamsLoader = React.memo(Suspender)
 export default SearchParamsLoader
 
 export const useSearchParamsLoader = () => {
-  const [searchParams, setSearchParams] =
-    useState<ReadonlyURLSearchParams | null>(null)
+  const [searchParams, setSearchParams] = useState<ReadonlyURLSearchParams | null>(null)
   return {
     searchParams,
     setSearchParams

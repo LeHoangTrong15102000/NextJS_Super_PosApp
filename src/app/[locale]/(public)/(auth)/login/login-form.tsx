@@ -1,12 +1,6 @@
 'use client'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useForm } from 'react-hook-form'
@@ -22,9 +16,7 @@ import { useAppStore } from '@/components/app-provider'
 import envConfig from '@/config'
 import { Link } from '@/i18n/routing'
 import { useTranslations } from 'next-intl'
-import SearchParamsLoader, {
-  useSearchParamsLoader
-} from '@/components/search-params-loader'
+import SearchParamsLoader, { useSearchParamsLoader } from '@/components/search-params-loader'
 import { LoaderCircle } from 'lucide-react'
 
 const getOauthGoogleUrl = () => {
@@ -35,10 +27,9 @@ const getOauthGoogleUrl = () => {
     access_type: 'offline',
     response_type: 'code',
     prompt: 'consent',
-    scope: [
-      'https://www.googleapis.com/auth/userinfo.profile',
-      'https://www.googleapis.com/auth/userinfo.email'
-    ].join(' ')
+    scope: ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'].join(
+      ' '
+    )
   }
   const qs = new URLSearchParams(options)
   return `${rootUrl}?${qs.toString()}`
@@ -99,7 +90,9 @@ export default function LoginForm() {
             className='space-y-2 max-w-[600px] flex-shrink-0 w-full'
             noValidate
             onSubmit={form.handleSubmit(onSubmit, (err) => {
-              console.log(err)
+              if (process.env.NODE_ENV === 'development') {
+                console.error('Form validation errors:', err)
+              }
             })}
           >
             <div className='grid gap-4'>
@@ -110,16 +103,9 @@ export default function LoginForm() {
                   <FormItem>
                     <div className='grid gap-2'>
                       <Label htmlFor='email'>Email</Label>
-                      <Input
-                        id='email'
-                        type='email'
-                        placeholder='m@example.com'
-                        required
-                        {...field}
-                      />
+                      <Input id='email' type='email' placeholder='m@example.com' required {...field} />
                       <FormMessage>
-                        {Boolean(errors.email?.message) &&
-                          errorMessageT(errors.email?.message as any)}
+                        {Boolean(errors.email?.message) && errorMessageT(errors.email?.message as any)}
                       </FormMessage>
                     </div>
                   </FormItem>
@@ -134,24 +120,16 @@ export default function LoginForm() {
                       <div className='flex items-center'>
                         <Label htmlFor='password'>Password</Label>
                       </div>
-                      <Input
-                        id='password'
-                        type='password'
-                        required
-                        {...field}
-                      />
+                      <Input id='password' type='password' required {...field} />
                       <FormMessage>
-                        {Boolean(errors.password?.message) &&
-                          errorMessageT(errors.password?.message as any)}
+                        {Boolean(errors.password?.message) && errorMessageT(errors.password?.message as any)}
                       </FormMessage>
                     </div>
                   </FormItem>
                 )}
               />
               <Button type='submit' className='w-full'>
-                {loginMutation.isPending && (
-                  <LoaderCircle className='w-5 h-5 mr-2 animate-spin' />
-                )}
+                {loginMutation.isPending && <LoaderCircle className='w-5 h-5 mr-2 animate-spin' />}
                 {t('buttonLogin')}
               </Button>
               <Link href={googleOauthUrl}>

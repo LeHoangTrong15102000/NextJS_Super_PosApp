@@ -38,11 +38,15 @@ export default function RefreshToken() {
     }
 
     function onConnect() {
-      console.log(socket?.id)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Socket connected:', socket?.id)
+      }
     }
 
     function onDisconnect() {
-      console.log('disconnect')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Socket disconnected')
+      }
     }
 
     function onRefreshTokenSocket() {
