@@ -1,6 +1,6 @@
 import dishApiRequest from '@/apiRequests/dish'
 import envConfig, { locales } from '@/config'
-import { generateSlugUrl } from '@/lib/utils'
+import { generateSlugUrl, wrapServerApi } from '@/lib/utils'
 import type { MetadataRoute } from 'next'
 
 const staticRoutes: MetadataRoute.Sitemap = [
@@ -17,9 +17,9 @@ const staticRoutes: MetadataRoute.Sitemap = [
 ]
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const result = await dishApiRequest.list()
+  const result = await wrapServerApi(dishApiRequest.list)
 
-  const dishList = result.payload.data
+  const dishList = result?.payload.data ?? []
   const localizeStaticSiteMap = locales.reduce((acc, locale) => {
     return [
       ...acc,
