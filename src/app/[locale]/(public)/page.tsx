@@ -1,5 +1,5 @@
 import dishApiRequest from '@/apiRequests/dish'
-import { formatCurrency, generateSlugUrl } from '@/lib/utils'
+import { formatCurrency, generateSlugUrl, wrapServerApi } from '@/lib/utils'
 import { DishListResType } from '@/schemaValidations/dish.schema'
 import Image from 'next/image'
 import { Link } from '@/i18n/routing'
@@ -32,16 +32,8 @@ export default async function Home(props: { params: Promise<{ locale: string }> 
 
   setRequestLocale(locale)
   const t = await getTranslations('HomePage')
-  let dishList: DishListResType['data'] = []
-  try {
-    const result = await dishApiRequest.list()
-    const {
-      payload: { data }
-    } = result
-    dishList = data
-  } catch (error) {
-    return <div>Something went wrong</div>
-  }
+  const result = await wrapServerApi(dishApiRequest.list)
+  const dishList: DishListResType['data'] = result?.payload.data ?? []
   return (
     <div className='w-full space-y-4'>
       <section className='relative z-10'>
