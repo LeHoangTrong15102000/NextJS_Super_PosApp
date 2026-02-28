@@ -19,7 +19,7 @@ const unAuthPaths = ['/vi/login', '/en/login']
 const loginPaths = ['/vi/login', '/en/login']
 
 // This function can be marked `async` if using `await` inside
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const handleI18nRouting = createMiddleware(routing)
   const response = handleI18nRouting(request)
   const { pathname, searchParams } = request.nextUrl
@@ -103,3 +103,4 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: ['/', '/(vi|en)/:path*']
 }
+
