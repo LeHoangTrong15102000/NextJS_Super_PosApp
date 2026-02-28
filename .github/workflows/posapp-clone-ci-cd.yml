@@ -16,20 +16,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
-      - name: Clean up old node_modules and lock file
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Clean up old node_modules
+        run: rm -rf node_modules
+
+      - name: Enable corepack and install pnpm
         run: |
-          rm -rf node_modules
-          rm -f package-lock.json
-      
+          corepack enable
+          corepack prepare pnpm@10.12.1 --activate
+
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Install Dependencies with Legacy Peer Deps
-        run: npm install --legacy-peer-deps || npm install --legacy-peer-deps --force
+      - name: Install Dependencies
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build Project Locally
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
