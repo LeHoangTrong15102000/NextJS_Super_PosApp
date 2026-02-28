@@ -24,15 +24,15 @@ jobs:
       
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
-      
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
       - name: Install Dependencies with Legacy Peer Deps
         run: npm install --legacy-peer-deps || npm install --legacy-peer-deps --force
 
       - name: Build Project Locally
-        run: npm run build
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-      
       - name: Deploy Project Artifacts to Vercel
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
