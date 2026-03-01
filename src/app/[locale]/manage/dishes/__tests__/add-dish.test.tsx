@@ -12,6 +12,19 @@ jest.mock('@/queries/useMedia')
 jest.mock('@/apiRequests/revalidate')
 jest.mock('@/components/ui/use-toast')
 
+// Helper to create userEvent with pointerEventsCheck disabled (for Radix dialog)
+const setupUser = () => userEvent.setup({ pointerEventsCheck: 0 })
+
+// Helper to set file on input element and trigger change event
+const setFileOnInput = (fileInput: HTMLInputElement, file: File) => {
+  Object.defineProperty(fileInput, 'files', {
+    value: [file],
+    writable: false,
+    configurable: true
+  })
+  fireEvent.change(fileInput, { target: { files: [file] } })
+}
+
 // Mock URL.createObjectURL and URL.revokeObjectURL
 Object.defineProperty(global.URL, 'createObjectURL', {
   writable: true,
@@ -63,7 +76,7 @@ describe('AddDish Component', () => {
     })
 
     it('should open dialog when trigger button is clicked', async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
       render(<AddDish />)
 
       const triggerButton = screen.getByRole('button', { name: /thêm món ăn/i })
@@ -76,7 +89,7 @@ describe('AddDish Component', () => {
 
   describe('Form Fields', () => {
     beforeEach(async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
       render(<AddDish />)
 
       const triggerButton = screen.getByRole('button', { name: /thêm món ăn/i })
@@ -102,7 +115,7 @@ describe('AddDish Component', () => {
 
   describe('Form Validation', () => {
     beforeEach(async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
       render(<AddDish />)
 
       const triggerButton = screen.getByRole('button', { name: /thêm món ăn/i })
@@ -110,19 +123,19 @@ describe('AddDish Component', () => {
     })
 
     it('should show validation errors for empty required fields', async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
 
       const submitButton = screen.getByRole('button', { name: /thêm/i })
       await user.click(submitButton)
 
       await waitFor(() => {
-        // Zod default error messages
-        expect(screen.getByText(/string must contain at least 1 character/i)).toBeInTheDocument()
+        // Zod 4 default error messages
+        expect(screen.getByText(/too small.*>=1 characters/i)).toBeInTheDocument()
       })
     })
 
     it('should validate name field', async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
 
       const nameInput = screen.getByLabelText(/tên món ăn/i)
       const submitButton = screen.getByRole('button', { name: /thêm/i })
@@ -130,18 +143,18 @@ describe('AddDish Component', () => {
       // Test empty name
       await user.click(submitButton)
       await waitFor(() => {
-        expect(screen.getByText(/string must contain at least 1 character/i)).toBeInTheDocument()
+        expect(screen.getByText(/too small.*>=1 characters/i)).toBeInTheDocument()
       })
 
       // Test valid name
       await user.type(nameInput, 'Phở Bò Tái')
       await waitFor(() => {
-        expect(screen.queryByText(/string must contain at least 1 character/i)).not.toBeInTheDocument()
+        expect(screen.queryByText(/too small.*>=1 characters/i)).not.toBeInTheDocument()
       })
     })
 
     it('should validate price field', async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
 
       const priceInput = screen.getByLabelText(/giá/i)
       const submitButton = screen.getByRole('button', { name: /thêm/i })
@@ -151,7 +164,7 @@ describe('AddDish Component', () => {
       await user.click(submitButton)
 
       await waitFor(() => {
-        expect(screen.getByText(/number must be greater than 0/i)).toBeInTheDocument()
+        expect(screen.getByText(/too small.*>0/i)).toBeInTheDocument()
       })
 
       // Test with valid price
@@ -159,12 +172,12 @@ describe('AddDish Component', () => {
       await user.type(priceInput, '85000')
 
       await waitFor(() => {
-        expect(screen.queryByText(/number must be greater than 0/i)).not.toBeInTheDocument()
+        expect(screen.queryByText(/too small.*>0/i)).not.toBeInTheDocument()
       })
     })
 
     it('should validate image URL field', async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
 
       const nameInput = screen.getByLabelText(/tên món ăn/i)
       const priceInput = screen.getByLabelText(/giá/i)
@@ -173,6 +186,7 @@ describe('AddDish Component', () => {
 
       // Fill other required fields
       await user.type(nameInput, 'Test Dish')
+      await user.clear(priceInput)
       await user.type(priceInput, '50000')
       await user.type(descriptionInput, 'Test description')
 
@@ -184,41 +198,37 @@ describe('AddDish Component', () => {
     })
 
     it('should accept valid form data', async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
 
       const nameInput = screen.getByLabelText(/tên món ăn/i)
       const priceInput = screen.getByLabelText(/giá/i)
       const descriptionInput = screen.getByLabelText(/mô tả sản phẩm/i)
 
       await user.type(nameInput, 'Phở Bò Tái')
+      await user.clear(priceInput)
       await user.type(priceInput, '85000')
       await user.type(descriptionInput, 'Phở bò tái truyền thống')
 
       // Mock file selection to set a valid image URL
       const fileInput = screen
         .getByRole('button', { name: /upload/i })
-        .parentElement?.querySelector('input[type="file"]')
+        .parentElement?.querySelector('input[type="file"]') as HTMLInputElement
       expect(fileInput).toBeInTheDocument()
 
       if (fileInput) {
         const file = new File(['image content'], 'pho-bo.jpg', { type: 'image/jpeg' })
-        // Mock the file input change
-        Object.defineProperty(fileInput, 'files', {
-          value: [file],
-          writable: false
-        })
-        fireEvent.change(fileInput)
+        setFileOnInput(fileInput, file)
       }
 
       // No validation errors should be present
-      expect(screen.queryByText(/string must contain at least 1 character/i)).not.toBeInTheDocument()
-      expect(screen.queryByText(/number must be greater than 0/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/too small.*>=1 characters/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/too small.*>0/i)).not.toBeInTheDocument()
     })
   })
 
   describe('Image Upload', () => {
     beforeEach(async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
       render(<AddDish />)
 
       const triggerButton = screen.getByRole('button', { name: /thêm món ăn/i })
@@ -228,16 +238,12 @@ describe('AddDish Component', () => {
     it('should handle image file selection', async () => {
       const fileInput = screen
         .getByRole('button', { name: /upload/i })
-        .parentElement?.querySelector('input[type="file"]')
+        .parentElement?.querySelector('input[type="file"]') as HTMLInputElement
       expect(fileInput).toBeInTheDocument()
 
       if (fileInput) {
         const file = new File(['image content'], 'dish-image.jpg', { type: 'image/jpeg' })
-        Object.defineProperty(fileInput, 'files', {
-          value: [file],
-          writable: false
-        })
-        fireEvent.change(fileInput)
+        setFileOnInput(fileInput, file)
 
         expect(URL.createObjectURL).toHaveBeenCalledWith(file)
       }
@@ -253,15 +259,11 @@ describe('AddDish Component', () => {
     it('should display preview of selected image', async () => {
       const fileInput = screen
         .getByRole('button', { name: /upload/i })
-        .parentElement?.querySelector('input[type="file"]')
+        .parentElement?.querySelector('input[type="file"]') as HTMLInputElement
 
       if (fileInput) {
         const file = new File(['image content'], 'dish-image.jpg', { type: 'image/jpeg' })
-        Object.defineProperty(fileInput, 'files', {
-          value: [file],
-          writable: false
-        })
-        fireEvent.change(fileInput)
+        setFileOnInput(fileInput, file)
 
         await waitFor(() => {
           const previewImage = screen.getByRole('img')
@@ -273,7 +275,7 @@ describe('AddDish Component', () => {
 
   describe('Form Submission', () => {
     beforeEach(async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
       render(<AddDish />)
 
       const triggerButton = screen.getByRole('button', { name: /thêm món ăn/i })
@@ -281,7 +283,7 @@ describe('AddDish Component', () => {
     })
 
     it('should submit form with valid data without file upload', async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
 
       const mockResponse = {
         payload: {
@@ -301,21 +303,20 @@ describe('AddDish Component', () => {
 
       // Fill form
       await user.type(screen.getByLabelText(/tên món ăn/i), 'Phở Bò Tái')
-      await user.type(screen.getByLabelText(/giá/i), '85000')
+      // Clear the default 0 value first, then type the price
+      const priceInput = screen.getByLabelText(/giá/i)
+      await user.clear(priceInput)
+      await user.type(priceInput, '85000')
       await user.type(screen.getByLabelText(/mô tả sản phẩm/i), 'Phở bò tái truyền thống')
 
       // Set image URL via hidden input field
       const fileInput = screen
         .getByRole('button', { name: /upload/i })
-        .parentElement?.querySelector('input[type="file"]')
+        .parentElement?.querySelector('input[type="file"]') as HTMLInputElement
 
       if (fileInput) {
         const file = new File(['image content'], 'pho-bo.jpg', { type: 'image/jpeg' })
-        Object.defineProperty(fileInput, 'files', {
-          value: [file],
-          writable: false
-        })
-        fireEvent.change(fileInput)
+        setFileOnInput(fileInput, file)
       }
 
       // Submit form
@@ -334,7 +335,7 @@ describe('AddDish Component', () => {
     })
 
     it('should handle different dish statuses', async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
 
       const mockResponse = {
         payload: {
@@ -354,21 +355,19 @@ describe('AddDish Component', () => {
 
       // Fill form
       await user.type(screen.getByLabelText(/tên món ăn/i), 'Bún Bò Huế')
-      await user.type(screen.getByLabelText(/giá/i), '75000')
+      const priceInput = screen.getByLabelText(/giá/i)
+      await user.clear(priceInput)
+      await user.type(priceInput, '75000')
       await user.type(screen.getByLabelText(/mô tả sản phẩm/i), 'Bún bò Huế cay nồng')
 
       // Set image
       const fileInput = screen
         .getByRole('button', { name: /upload/i })
-        .parentElement?.querySelector('input[type="file"]')
+        .parentElement?.querySelector('input[type="file"]') as HTMLInputElement
 
       if (fileInput) {
         const file = new File(['image content'], 'bun-bo-hue.jpg', { type: 'image/jpeg' })
-        Object.defineProperty(fileInput, 'files', {
-          value: [file],
-          writable: false
-        })
-        fireEvent.change(fileInput)
+        setFileOnInput(fileInput, file)
       }
 
       // Submit form
@@ -386,7 +385,7 @@ describe('AddDish Component', () => {
     })
 
     it('should prevent double submission', async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
 
       // Mock pending state
       mockUseAddDishMutation.mockReturnValue({
@@ -403,19 +402,31 @@ describe('AddDish Component', () => {
 
       // Fill form
       await user.type(screen.getByLabelText(/tên món ăn/i), 'Test Dish')
-      await user.type(screen.getByLabelText(/giá/i), '50000')
+      const priceInput = screen.getByLabelText(/giá/i)
+      await user.clear(priceInput)
+      await user.type(priceInput, '50000')
       await user.type(screen.getByLabelText(/mô tả sản phẩm/i), 'Test description')
 
-      // Submit form
+      // Set image
+      const fileInput = screen
+        .getByRole('button', { name: /upload/i })
+        .parentElement?.querySelector('input[type="file"]') as HTMLInputElement
+
+      if (fileInput) {
+        const file = new File(['image content'], 'test.jpg', { type: 'image/jpeg' })
+        setFileOnInput(fileInput, file)
+      }
+
+      // Submit form using fireEvent to bypass pointer-events check
       const submitButton = screen.getByRole('button', { name: /thêm/i })
-      await user.click(submitButton)
+      fireEvent.click(submitButton)
 
       // Should not call mutateAsync when pending
       expect(mockMutateAsync).not.toHaveBeenCalled()
     })
 
     it('should reset form after successful submission', async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
 
       const mockResponse = {
         payload: {
@@ -435,25 +446,23 @@ describe('AddDish Component', () => {
 
       // Fill form
       const nameInput = screen.getByLabelText(/tên món ăn/i)
-      const priceInput = screen.getByLabelText(/giá/i)
+      const priceInput = screen.getByLabelText(/giá/i) as HTMLInputElement
       const descriptionInput = screen.getByLabelText(/mô tả sản phẩm/i)
 
       await user.type(nameInput, 'Test Dish')
+      // Clear the default 0 value first, then type the price
+      await user.clear(priceInput)
       await user.type(priceInput, '50000')
       await user.type(descriptionInput, 'Test description')
 
       // Set image
       const fileInput = screen
         .getByRole('button', { name: /upload/i })
-        .parentElement?.querySelector('input[type="file"]')
+        .parentElement?.querySelector('input[type="file"]') as HTMLInputElement
 
       if (fileInput) {
         const file = new File(['image content'], 'test.jpg', { type: 'image/jpeg' })
-        Object.defineProperty(fileInput, 'files', {
-          value: [file],
-          writable: false
-        })
-        fireEvent.change(fileInput)
+        setFileOnInput(fileInput, file)
       }
 
       // Submit form
@@ -475,7 +484,7 @@ describe('AddDish Component', () => {
 
   describe('Error Handling', () => {
     beforeEach(async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
       render(<AddDish />)
 
       const triggerButton = screen.getByRole('button', { name: /thêm món ăn/i })
@@ -483,28 +492,27 @@ describe('AddDish Component', () => {
     })
 
     it('should handle API errors during submission', async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
 
       const mockError = new Error('Server error')
       mockMutateAsync.mockRejectedValueOnce(mockError)
 
       // Fill form
       await user.type(screen.getByLabelText(/tên món ăn/i), 'Test Dish')
-      await user.type(screen.getByLabelText(/giá/i), '50000')
+      const priceInput = screen.getByLabelText(/giá/i)
+      // Clear the default 0 value first, then type the price
+      await user.clear(priceInput)
+      await user.type(priceInput, '50000')
       await user.type(screen.getByLabelText(/mô tả sản phẩm/i), 'Test description')
 
       // Set image
       const fileInput = screen
         .getByRole('button', { name: /upload/i })
-        .parentElement?.querySelector('input[type="file"]')
+        .parentElement?.querySelector('input[type="file"]') as HTMLInputElement
 
       if (fileInput) {
         const file = new File(['image content'], 'test.jpg', { type: 'image/jpeg' })
-        Object.defineProperty(fileInput, 'files', {
-          value: [file],
-          writable: false
-        })
-        fireEvent.change(fileInput)
+        setFileOnInput(fileInput, file)
       }
 
       // Submit form
@@ -519,28 +527,27 @@ describe('AddDish Component', () => {
     })
 
     it('should handle upload errors', async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
 
       const mockUploadError = new Error('Failed to upload image')
       mockUploadMutateAsync.mockRejectedValueOnce(mockUploadError)
 
       // Fill form
       await user.type(screen.getByLabelText(/tên món ăn/i), 'Test Dish')
-      await user.type(screen.getByLabelText(/giá/i), '50000')
+      const priceInput = screen.getByLabelText(/giá/i)
+      // Clear the default 0 value first, then type the price
+      await user.clear(priceInput)
+      await user.type(priceInput, '50000')
       await user.type(screen.getByLabelText(/mô tả sản phẩm/i), 'Test description')
 
       // Set image file to trigger upload
       const fileInput = screen
         .getByRole('button', { name: /upload/i })
-        .parentElement?.querySelector('input[type="file"]')
+        .parentElement?.querySelector('input[type="file"]') as HTMLInputElement
 
       if (fileInput) {
         const file = new File(['image content'], 'test.jpg', { type: 'image/jpeg' })
-        Object.defineProperty(fileInput, 'files', {
-          value: [file],
-          writable: false
-        })
-        fireEvent.change(fileInput)
+        setFileOnInput(fileInput, file)
       }
 
       // Submit form
@@ -557,7 +564,7 @@ describe('AddDish Component', () => {
 
   describe('File Upload Integration', () => {
     beforeEach(async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
       render(<AddDish />)
 
       const triggerButton = screen.getByRole('button', { name: /thêm món ăn/i })
@@ -565,7 +572,7 @@ describe('AddDish Component', () => {
     })
 
     it('should upload file and submit with uploaded image URL', async () => {
-      const user = userEvent.setup()
+      const user = setupUser()
 
       const mockUploadResponse = {
         payload: {
@@ -592,21 +599,20 @@ describe('AddDish Component', () => {
 
       // Fill form
       await user.type(screen.getByLabelText(/tên món ăn/i), 'Test Dish')
-      await user.type(screen.getByLabelText(/giá/i), '50000')
+      const priceInput = screen.getByLabelText(/giá/i)
+      // Clear the default 0 value first, then type the price
+      await user.clear(priceInput)
+      await user.type(priceInput, '50000')
       await user.type(screen.getByLabelText(/mô tả sản phẩm/i), 'Test description')
 
       // Set image file to trigger upload
       const fileInput = screen
         .getByRole('button', { name: /upload/i })
-        .parentElement?.querySelector('input[type="file"]')
+        .parentElement?.querySelector('input[type="file"]') as HTMLInputElement
 
       if (fileInput) {
         const file = new File(['image content'], 'test.jpg', { type: 'image/jpeg' })
-        Object.defineProperty(fileInput, 'files', {
-          value: [file],
-          writable: false
-        })
-        fireEvent.change(fileInput)
+        setFileOnInput(fileInput, file)
       }
 
       // Submit form

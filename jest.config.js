@@ -8,7 +8,9 @@ const customJestConfig = {
     // Handle CSS modules and static assets
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$':
-      '<rootDir>/src/__mocks__/fileMock.js'
+      '<rootDir>/src/__mocks__/fileMock.js',
+    // Mock ESM-only query-string package
+    '^query-string$': '<rootDir>/src/__mocks__/query-string.js'
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
@@ -50,7 +52,7 @@ const customJestConfig = {
       }
     ]
   },
-  transformIgnorePatterns: ['node_modules/(?!(.*\\.mjs$))'],
+  transformIgnorePatterns: ['<rootDir>/node_modules/(?!(.+\\.mjs$|query-string|split-on-first|filter-obj|decode-uri-component))'],
   testMatch: ['<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}', '<rootDir>/src/**/*.(test|spec).{js,jsx,ts,tsx}'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   testEnvironmentOptions: {

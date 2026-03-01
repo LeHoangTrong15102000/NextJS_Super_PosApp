@@ -45,7 +45,7 @@ export default function LoginForm() {
   const setRole = useAppStore((state) => state.setRole)
 
   const form = useForm<LoginBodyType>({
-    resolver: zodResolver(LoginBody),
+    resolver: zodResolver(LoginBody) as any,
     defaultValues: {
       email: '',
       password: ''

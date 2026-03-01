@@ -27,7 +27,7 @@ export default function GuestLoginForm() {
   const router = useRouter()
   const loginMutation = useGuestLoginMutation()
   const form = useForm<GuestLoginBodyType>({
-    resolver: zodResolver(GuestLoginBody),
+    resolver: zodResolver(GuestLoginBody) as any,
     defaultValues: {
       name: '',
       token: token ?? '',

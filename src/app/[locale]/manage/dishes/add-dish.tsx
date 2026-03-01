@@ -26,7 +26,7 @@ export default function AddDish() {
   const uploadMediaMutation = useUploadMediaMutation()
   const imageInputRef = useRef<HTMLInputElement | null>(null)
   const form = useForm<CreateDishBodyType>({
-    resolver: zodResolver(CreateDishBody),
+    resolver: zodResolver(CreateDishBody) as any,
     defaultValues: {
       name: '',
       description: '',

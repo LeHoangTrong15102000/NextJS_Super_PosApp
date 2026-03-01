@@ -9,25 +9,36 @@ import { useRouter } from '@/i18n/routing'
 // Mock dependencies
 jest.mock('@/queries/useAuth')
 jest.mock('@/components/app-provider')
-jest.mock('@/i18n/routing')
-jest.mock('@/components/search-params-loader', () => ({
-  __esModule: true,
-  default: function MockSearchParamsLoader({
-    onParamsReceived
-  }: {
-    onParamsReceived: (params: URLSearchParams) => void
-  }) {
-    // Simulate component mounting and calling onParamsReceived
-    React.useEffect(() => {
-      onParamsReceived(new URLSearchParams(''))
-    }, [onParamsReceived])
-    return null
-  },
-  useSearchParamsLoader: () => ({
-    searchParams: new URLSearchParams(''),
-    setSearchParams: jest.fn()
-  })
-}))
+jest.mock('@/i18n/routing', () => {
+  const mockReact = require('react')
+  return {
+    useRouter: jest.fn(),
+    Link: ({ children, href, ...props }: { children: React.ReactNode; href: string }) => {
+      return mockReact.createElement('a', { href, ...props }, children)
+    }
+  }
+})
+jest.mock('@/components/search-params-loader', () => {
+  const { useEffect } = require('react')
+  return {
+    __esModule: true,
+    default: function MockSearchParamsLoader({
+      onParamsReceived
+    }: {
+      onParamsReceived: (params: URLSearchParams) => void
+    }) {
+      // Simulate component mounting and calling onParamsReceived
+      useEffect(() => {
+        onParamsReceived(new URLSearchParams(''))
+      }, [onParamsReceived])
+      return null
+    },
+    useSearchParamsLoader: () => ({
+      searchParams: new URLSearchParams(''),
+      setSearchParams: jest.fn()
+    })
+  }
+})
 
 const mockUseLoginMutation = useLoginMutation as jest.MockedFunction<typeof useLoginMutation>
 const mockUseAppStore = useAppStore as jest.MockedFunction<typeof useAppStore>
@@ -101,13 +112,11 @@ describe('LoginForm Component', () => {
 
     await user.click(submitButton)
 
+    // In Zod 4, email shows 'required' (from .min(1)) and password shows 'minmaxPassword' (from .min(6))
     await waitFor(() => {
       expect(screen.getByText('required')).toBeInTheDocument()
+      expect(screen.getByText('minmaxPassword')).toBeInTheDocument()
     })
-
-    // Should show validation errors for both email and password
-    const requiredErrors = screen.getAllByText('required')
-    expect(requiredErrors).toHaveLength(2)
   })
 
   it('should validate email format', async () => {
@@ -186,8 +195,6 @@ describe('LoginForm Component', () => {
   })
 
   it('should show loading state during submission', async () => {
-    const user = userEvent.setup()
-
     // Mock pending state
     mockUseLoginMutation.mockReturnValue({
       mutateAsync: mockMutateAsync,
@@ -204,8 +211,9 @@ describe('LoginForm Component', () => {
 
     const submitButton = screen.getByRole('button', { name: /buttonLogin/i })
 
-    // Should show loading spinner when pending
-    expect(submitButton).toContainElement(screen.getByRole('img', { hidden: true })) // Lucide icon
+    // LoaderCircle renders an SVG with class 'animate-spin'
+    const spinner = submitButton.querySelector('svg.animate-spin')
+    expect(spinner).toBeInTheDocument()
   })
 
   it('should handle login error gracefully', async () => {
@@ -284,28 +292,21 @@ describe('LoginForm Component', () => {
   })
 
   it('should clear role when clearTokens parameter is present', () => {
-    // Mock search params with clearTokens
-    jest.doMock('@/components/search-params-loader', () => ({
-      __esModule: true,
-      default: function MockSearchParamsLoaderWithClearTokens({
-        onParamsReceived
-      }: {
-        onParamsReceived: (params: URLSearchParams) => void
-      }) {
-        React.useEffect(() => {
-          onParamsReceived(new URLSearchParams('clearTokens=true'))
-        }, [onParamsReceived])
-        return null
-      },
-      useSearchParamsLoader: () => ({
-        searchParams: new URLSearchParams('clearTokens=true'),
-        setSearchParams: jest.fn()
-      })
-    }))
+    // Override the useSearchParamsLoader mock to return clearTokens=true
+    const mockSearchParamsLoaderModule = require('@/components/search-params-loader')
+    const originalUseSearchParamsLoader = mockSearchParamsLoaderModule.useSearchParamsLoader
+
+    mockSearchParamsLoaderModule.useSearchParamsLoader = () => ({
+      searchParams: new URLSearchParams('clearTokens=true'),
+      setSearchParams: jest.fn()
+    })
 
     render(<LoginForm />)
 
     expect(mockSetRole).toHaveBeenCalledWith()
+
+    // Restore original mock
+    mockSearchParamsLoaderModule.useSearchParamsLoader = originalUseSearchParamsLoader
   })
 
   it('should have proper form accessibility', () => {

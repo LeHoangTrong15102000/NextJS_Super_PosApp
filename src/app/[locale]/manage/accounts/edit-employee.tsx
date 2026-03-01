@@ -59,7 +59,7 @@ export default function EditEmployee({
   const uploadMediaMutation = useUploadMediaMutation()
 
   const form = useForm<UpdateEmployeeAccountBodyType>({
-    resolver: zodResolver(UpdateEmployeeAccountBody),
+    resolver: zodResolver(UpdateEmployeeAccountBody) as any,
     defaultValues: {
       name: '',
       email: '',

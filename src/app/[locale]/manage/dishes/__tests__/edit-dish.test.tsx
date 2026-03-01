@@ -142,7 +142,8 @@ describe('EditDish Component', () => {
       await user.click(submitButton)
 
       await waitFor(() => {
-        expect(screen.getByText(/tên là bắt buộc/i)).toBeInTheDocument()
+        // Zod 4 error message for z.string().min(1)
+        expect(screen.getByText(/too small.*>=1 characters/i)).toBeInTheDocument()
       })
     })
 
@@ -159,7 +160,8 @@ describe('EditDish Component', () => {
       await user.click(submitButton)
 
       await waitFor(() => {
-        expect(screen.getByText(/giá phải là số dương/i)).toBeInTheDocument()
+        // Zod 4 error message for z.coerce.number().positive()
+        expect(screen.getByText(/too small.*>0/i)).toBeInTheDocument()
       })
     })
   })

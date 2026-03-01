@@ -85,6 +85,8 @@ process.env.NEXT_PUBLIC_API_ENDPOINT = 'http://localhost:4000'
 process.env.NEXT_PUBLIC_URL = 'http://localhost:3000'
 process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID = 'mock-google-client-id'
 process.env.NEXT_PUBLIC_GOOGLE_AUTHORIZED_REDIRECT_URI = 'http://localhost:3000/vi/login/oauth'
+process.env.JWT_SECRET = 'mock-jwt-secret-for-testing'
+process.env.REVALIDATION_SECRET = 'mock-revalidation-secret-for-testing'
 
 // Mock localStorage
 const localStorageMock = {

@@ -31,7 +31,7 @@ export default function AddEmployee() {
 
   const avatarInputRef = useRef<HTMLInputElement | null>(null)
   const form = useForm<CreateEmployeeAccountBodyType>({
-    resolver: zodResolver(CreateEmployeeAccountBody),
+    resolver: zodResolver(CreateEmployeeAccountBody) as any,
     defaultValues: {
       name: '',
       email: '',
