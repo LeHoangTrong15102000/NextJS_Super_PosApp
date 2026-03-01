@@ -2,7 +2,7 @@
 
 import { useAppStore } from '@/components/app-provider'
 import { toast } from '@/components/ui/use-toast'
-import { decodeToken, generateSocketInstace } from '@/lib/utils'
+import { decodeToken, generateSocketInstance } from '@/lib/utils'
 import { useRouter } from '@/i18n/routing'
 import { useSetTokenToCookieMutation } from '@/queries/useAuth'
 import { Metadata } from 'next'
@@ -35,7 +35,7 @@ export default function Oauth() {
         mutateAsync({ accessToken, refreshToken })
           .then(() => {
             setRole(role)
-            setSocket(generateSocketInstace(accessToken))
+            setSocket(generateSocketInstance(accessToken))
             router.push('/manage/dashboard')
           })
           .catch((e) => {

@@ -1,7 +1,7 @@
 import { toast } from '@/components/ui/use-toast'
 import { EntityError } from '@/lib/http'
 import { type ClassValue, clsx } from 'clsx'
-import { UseFormSetError } from 'react-hook-form'
+import { FieldValues, UseFormSetError } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 import { jwtDecode } from 'jwt-decode'
 import authApiRequest from '@/apiRequests/auth'
@@ -29,8 +29,8 @@ export const handleErrorApi = ({
   setError,
   duration
 }: {
-  error: any
-  setError?: UseFormSetError<any>
+  error: unknown
+  setError?: UseFormSetError<FieldValues>
   duration?: number
 }) => {
   if (error instanceof EntityError && setError) {
@@ -41,9 +41,13 @@ export const handleErrorApi = ({
       })
     })
   } else {
+    const message =
+      error instanceof Error
+        ? (error as { payload?: { message?: string } }).payload?.message ?? error.message
+        : 'Lỗi không xác định'
     toast({
       title: 'Lỗi',
-      description: error?.payload?.message ?? 'Lỗi không xác định',
+      description: message,
       variant: 'destructive',
       duration: duration ?? 5000
     })
@@ -174,7 +178,7 @@ export const formatDateTimeToTimeString = (date: string | Date) => {
   return format(date instanceof Date ? date : new Date(date), 'HH:mm')
 }
 
-export const generateSocketInstace = (accessToken: string) => {
+export const generateSocketInstance = (accessToken: string) => {
   return io(envConfig.NEXT_PUBLIC_API_ENDPOINT, {
     auth: {
       Authorization: `Bearer ${accessToken}`
@@ -194,8 +198,8 @@ export const wrapServerApi = async <T>(fn: () => Promise<T>) => {
   let result = null
   try {
     result = await fn()
-  } catch (error: any) {
-    if (error.digest?.includes('NEXT_REDIRECT')) {
+  } catch (error: unknown) {
+    if (error instanceof Error && 'digest' in error && typeof (error as { digest?: string }).digest === 'string' && (error as { digest: string }).digest.includes('NEXT_REDIRECT')) {
       throw error
     }
   }

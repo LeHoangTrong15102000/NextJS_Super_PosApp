@@ -1,10 +1,11 @@
 import tableApiRequest from '@/apiRequests/table'
 import { UpdateTableBodyType } from '@/schemaValidations/table.schema'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query-keys'
 
 export const useTableListQuery = () => {
   return useQuery({
-    queryKey: ['tables'],
+    queryKey: queryKeys.tables.all,
     queryFn: tableApiRequest.list
   })
 }
@@ -17,7 +18,7 @@ export const useGetTableQuery = ({
   enabled: boolean
 }) => {
   return useQuery({
-    queryKey: ['tables', id],
+    queryKey: queryKeys.tables.detail(id),
     queryFn: () => tableApiRequest.getTable(id),
     enabled
   })
@@ -29,7 +30,7 @@ export const useAddTableMutation = () => {
     mutationFn: tableApiRequest.add,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['tables']
+        queryKey: queryKeys.tables.all
       })
     }
   })
@@ -43,7 +44,7 @@ export const useUpdateTableMutation = () => {
       tableApiRequest.updateTable(id, body),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['tables'],
+        queryKey: queryKeys.tables.all,
         exact: true
       })
     }
@@ -57,7 +58,7 @@ export const useDeleteTableMutation = () => {
     mutationFn: tableApiRequest.deleteTable,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['tables']
+        queryKey: queryKeys.tables.all
       })
     }
   })

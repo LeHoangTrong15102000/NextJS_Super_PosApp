@@ -63,12 +63,13 @@ export const useOrderService = (orderList: GetOrdersResType['data']) => {
       const servingGuestObject: OrderObjectByGuestID = {}
       for (const guestId in guestObject) {
         const guestOrders = guestObject[guestId]
-        const isServingGuest = guestOrders.some((order) =>
-          [
+        const servingStatuses: string[] = [
             OrderStatus.Pending,
             OrderStatus.Processing,
             OrderStatus.Delivered
-          ].includes(order.status as any)
+          ]
+        const isServingGuest = guestOrders.some((order) =>
+          servingStatuses.includes(order.status)
         )
         if (isServingGuest) {
           servingGuestObject[Number(guestId)] = guestOrders

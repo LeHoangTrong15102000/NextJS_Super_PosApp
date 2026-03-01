@@ -9,6 +9,7 @@ import {
 import { LoginResType } from '@/schemaValidations/auth.schema'
 import { redirect } from '@/i18n/routing'
 import Cookies from 'js-cookie'
+import { AUTH_API_PATHS } from '@/constants/routes'
 type CustomOptions = Omit<RequestInit, 'method'> & {
   baseUrl?: string | undefined
 }
@@ -28,12 +29,12 @@ export class HttpError extends Error {
   status: number
   payload: {
     message: string
-    [key: string]: any
+    [key: string]: unknown
   }
-  constructor({ status, payload, message = 'Lỗi HTTP' }: { status: number; payload: any; message?: string }) {
+  constructor({ status, payload, message = 'Lỗi HTTP' }: { status: number; payload: Record<string, unknown>; message?: string }) {
     super(message)
     this.status = status
-    this.payload = payload
+    this.payload = payload as { message: string; [key: string]: unknown }
   }
 }
 
@@ -47,7 +48,7 @@ export class EntityError extends HttpError {
   }
 }
 
-let clientLogoutRequest: null | Promise<any> = null
+let clientLogoutRequest: null | Promise<Response> = null
 const isClient = typeof window !== 'undefined'
 const request = async <Response>(
   method: 'GET' | 'POST' | 'PUT' | 'DELETE',
@@ -85,7 +86,7 @@ const request = async <Response>(
     headers: {
       ...baseHeaders,
       ...options?.headers
-    } as any,
+    } as HeadersInit,
     body,
     method
   })
@@ -113,7 +114,7 @@ const request = async <Response>(
             body: null, // Logout mình sẽ cho phép luôn luôn thành công
             headers: {
               ...baseHeaders
-            } as any
+            } as HeadersInit
           })
           try {
             await clientLogoutRequest
@@ -131,10 +132,11 @@ const request = async <Response>(
       } else {
         // Đây là trường hợp khi mà chúng ta vẫn còn access token (còn hạn)
         // Và chúng ta gọi API ở Next.js Server (Route Handler , Server Component) đến Server Backend
-        const accessToken = (options?.headers as any)?.Authorization.split('Bearer ')[1]
+        const headers = options?.headers as Record<string, string> | undefined
+        const accessToken = headers?.Authorization?.split('Bearer ')[1]
         const locale = Cookies.get('NEXT_LOCALE')
         redirect({
-          href: `/login?accessToken=${accessToken}`,
+          href: `/login?clearTokens=true`,
           locale: locale ?? defaultLocale
         })
       }
@@ -145,18 +147,18 @@ const request = async <Response>(
   // Đảm bảo logic dưới đây chỉ chạy ở phía client (browser), Do cái http này chạy ở cả cient-com và server-com luôn
   if (isClient) {
     const normalizeUrl = normalizePath(url)
-    if (['api/auth/login', 'api/guest/auth/login'].includes(normalizeUrl)) {
+    if (AUTH_API_PATHS.LOGIN.includes(normalizeUrl)) {
       const { accessToken, refreshToken } = (payload as LoginResType).data
       setAccessTokenToLocalStorage(accessToken)
       setRefreshTokenToLocalStorage(refreshToken)
-    } else if ('api/auth/token' === normalizeUrl) {
+    } else if (AUTH_API_PATHS.TOKEN === normalizeUrl) {
       const { accessToken, refreshToken } = payload as {
         accessToken: string
         refreshToken: string
       }
       setAccessTokenToLocalStorage(accessToken)
       setRefreshTokenToLocalStorage(refreshToken)
-    } else if (['api/auth/logout', 'api/guest/auth/logout'].includes(normalizeUrl)) {
+    } else if (AUTH_API_PATHS.LOGOUT.includes(normalizeUrl)) {
       removeTokensFromLocalStorage()
     }
   }
@@ -167,10 +169,10 @@ const http = {
   get<Response>(url: string, options?: Omit<CustomOptions, 'body'> | undefined) {
     return request<Response>('GET', url, options)
   },
-  post<Response>(url: string, body: any, options?: Omit<CustomOptions, 'body'> | undefined) {
+  post<Response>(url: string, body: unknown, options?: Omit<CustomOptions, 'body'> | undefined) {
     return request<Response>('POST', url, { ...options, body })
   },
-  put<Response>(url: string, body: any, options?: Omit<CustomOptions, 'body'> | undefined) {
+  put<Response>(url: string, body: unknown, options?: Omit<CustomOptions, 'body'> | undefined) {
     return request<Response>('PUT', url, { ...options, body })
   },
   delete<Response>(url: string, options?: Omit<CustomOptions, 'body'> | undefined) {

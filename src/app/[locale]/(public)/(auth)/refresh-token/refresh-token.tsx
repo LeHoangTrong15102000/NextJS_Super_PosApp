@@ -11,13 +11,10 @@ import { useEffect } from 'react'
 export default function RefreshToken() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const refreshTokenFromUrl = searchParams.get('refreshToken')
   const redirectPathname = searchParams.get('redirect')
   useEffect(() => {
-    if (
-      refreshTokenFromUrl &&
-      refreshTokenFromUrl === getRefreshTokenFromLocalStorage()
-    ) {
+    const refreshTokenFromLocalStorage = getRefreshTokenFromLocalStorage()
+    if (refreshTokenFromLocalStorage) {
       checkAndRefreshToken({
         onSuccess: () => {
           router.push(redirectPathname || '/')
@@ -26,6 +23,6 @@ export default function RefreshToken() {
     } else {
       router.push('/')
     }
-  }, [router, refreshTokenFromUrl, redirectPathname])
+  }, [router, redirectPathname])
   return <div>Refresh token....</div>
 }

@@ -1,46 +1,24 @@
 import authApiRequest from '@/apiRequests/auth'
-import { LoginBodyType } from '@/schemaValidations/auth.schema'
-import { cookies } from 'next/headers'
-import jwt from 'jsonwebtoken'
+import { LoginBody, LoginBodyType } from '@/schemaValidations/auth.schema'
+import { setAuthCookies } from '@/lib/cookie-utils'
 import { HttpError } from '@/lib/http'
+import { createApiResponse, validateRequestBody } from '@/lib/api-helpers'
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as LoginBodyType
-  const cookieStore = await cookies()
+  const validation = await validateRequestBody<LoginBodyType>(request, LoginBody)
+  if (validation.error) return validation.error
   try {
-    const { payload } = await authApiRequest.sLogin(body)
+    const { payload } = await authApiRequest.sLogin(validation.data)
     const { accessToken, refreshToken } = payload.data
-    const decodedAccessToken = jwt.decode(accessToken) as { exp: number }
-    const decodedRefreshToken = jwt.decode(refreshToken) as { exp: number }
-    cookieStore.set('accessToken', accessToken, {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: true,
-      expires: decodedAccessToken.exp * 1000
-    })
-    cookieStore.set('refreshToken', refreshToken, {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: true,
-      expires: decodedRefreshToken.exp * 1000
-    })
+    await setAuthCookies(accessToken, refreshToken)
     return Response.json(payload)
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof HttpError) {
-      return Response.json(error.payload, {
-        status: error.status
-      })
-    } else {
-      return Response.json(
-        {
-          message: 'Có lỗi xảy ra'
-        },
-        {
-          status: 500
-        }
-      )
+      return createApiResponse(error.payload, error.status)
     }
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Login error:', error)
+    }
+    return createApiResponse({ message: 'Có lỗi xảy ra' }, 500)
   }
 }

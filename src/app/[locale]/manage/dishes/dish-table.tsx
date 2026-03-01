@@ -1,18 +1,7 @@
 'use client'
 
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
-import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable
-} from '@tanstack/react-table'
+import { ColumnDef, flexRender } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
 import DOMPurify from 'dompurify'
 import {
@@ -26,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,13 +27,13 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog'
 import { formatCurrency, getVietnameseDishStatus, handleErrorApi } from '@/lib/utils'
-import { useSearchParams } from 'next/navigation'
 import AutoPagination from '@/components/auto-pagination'
 import { DishListResType } from '@/schemaValidations/dish.schema'
 import EditDish from '@/app/[locale]/manage/dishes/edit-dish'
 import AddDish from '@/app/[locale]/manage/dishes/add-dish'
-import { useDeleteDishMutation, useDishListQuery } from '@/queries/useDish'
+import { useDeleteDishMutation } from '@/queries/useDish'
 import { toast } from '@/components/ui/use-toast'
+import { useDishTable } from '@/app/[locale]/manage/dishes/use-dish-table'
 
 type DishItem = DishListResType['data'][0]
 
@@ -184,53 +173,8 @@ function AlertDialogDeleteDish({
     </AlertDialog>
   )
 }
-// Số lượng item trên 1 trang
-const PAGE_SIZE = 10
 export default function DishTable() {
-  const searchParam = useSearchParams()
-  const page = searchParam.get('page') ? Number(searchParam.get('page')) : 1
-  const pageIndex = page - 1
-  const [dishIdEdit, setDishIdEdit] = useState<number | undefined>()
-  const [dishDelete, setDishDelete] = useState<DishItem | null>(null)
-  const dishListQuery = useDishListQuery()
-  const data = dishListQuery.data?.payload.data ?? []
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = useState({})
-  const [pagination, setPagination] = useState({
-    pageIndex, // Gía trị mặc định ban đầu, không có ý nghĩa khi data được fetch bất đồng bộ
-    pageSize: PAGE_SIZE //default page size
-  })
-
-  const table = useReactTable({
-    data,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    onPaginationChange: setPagination,
-    autoResetPageIndex: false,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-      pagination
-    }
-  })
-
-  useEffect(() => {
-    table.setPagination({
-      pageIndex,
-      pageSize: PAGE_SIZE
-    })
-  }, [table, pageIndex])
+  const { table, data, dishIdEdit, setDishIdEdit, dishDelete, setDishDelete } = useDishTable(columns)
 
   return (
     <DishTableContext.Provider value={{ dishIdEdit, setDishIdEdit, dishDelete, setDishDelete }}>

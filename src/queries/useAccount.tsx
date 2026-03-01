@@ -4,10 +4,11 @@ import {
   UpdateEmployeeAccountBodyType
 } from '@/schemaValidations/account.schema'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query-keys'
 
 export const useAccountMe = () => {
   return useQuery({
-    queryKey: ['account-me'],
+    queryKey: queryKeys.accountMe.all,
     queryFn: accountApiRequest.me
   })
 }
@@ -26,7 +27,7 @@ export const useChangePasswordMutation = () => {
 
 export const useGetAccountList = () => {
   return useQuery({
-    queryKey: ['accounts'],
+    queryKey: queryKeys.accounts.all,
     queryFn: accountApiRequest.list
   })
 }
@@ -39,7 +40,7 @@ export const useGetAccount = ({
   enabled: boolean
 }) => {
   return useQuery({
-    queryKey: ['accounts', id],
+    queryKey: queryKeys.accounts.detail(id),
     queryFn: () => accountApiRequest.getEmployee(id),
     enabled
   })
@@ -51,7 +52,7 @@ export const useAddAccountMutation = () => {
     mutationFn: accountApiRequest.addEmployee,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['accounts']
+        queryKey: queryKeys.accounts.all
       })
     }
   })
@@ -67,7 +68,7 @@ export const useUpdateAccountMutation = () => {
       accountApiRequest.updateEmployee(id, body),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['accounts'],
+        queryKey: queryKeys.accounts.all,
         exact: true
       })
     }
@@ -80,7 +81,7 @@ export const useDeleteAccountMutation = () => {
     mutationFn: accountApiRequest.deleteEmployee,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['accounts']
+        queryKey: queryKeys.accounts.all
       })
     }
   })
@@ -91,7 +92,7 @@ export const useGetGuestListQuery = (
 ) => {
   return useQuery({
     queryFn: () => accountApiRequest.guestList(queryParams),
-    queryKey: ['guests', queryParams]
+    queryKey: queryKeys.guests.list(queryParams)
   })
 }
 

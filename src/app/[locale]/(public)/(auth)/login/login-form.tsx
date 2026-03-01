@@ -9,7 +9,7 @@ import { LoginBody, LoginBodyType } from '@/schemaValidations/auth.schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useLoginMutation } from '@/queries/useAuth'
 import { toast } from '@/components/ui/use-toast'
-import { generateSocketInstace, handleErrorApi } from '@/lib/utils'
+import { generateSocketInstance, handleErrorApi } from '@/lib/utils'
 import { useRouter } from '@/i18n/routing'
 import { useEffect } from 'react'
 import { useAppStore } from '@/components/app-provider'
@@ -68,7 +68,7 @@ export default function LoginForm() {
       })
       setRole(result.payload.data.account.role)
       router.push('/manage/dashboard')
-      setSocket(generateSocketInstace(result.payload.data.accessToken))
+      setSocket(generateSocketInstance(result.payload.data.accessToken))
     } catch (error: any) {
       handleErrorApi({
         error,

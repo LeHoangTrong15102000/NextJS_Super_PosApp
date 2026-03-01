@@ -10,6 +10,7 @@ import { Suspense } from 'react'
 import envConfig, { Locale } from '@/config'
 import { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
+import { ErrorBoundary } from '@/components/error-boundary'
 type Props = {
   params: Promise<{ locale: Locale }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -47,7 +48,9 @@ export default function DishesPage() {
           </CardHeader>
           <CardContent>
             <Suspense>
-              <DishTable />
+              <ErrorBoundary>
+                <DishTable />
+              </ErrorBoundary>
             </Suspense>
           </CardContent>
         </Card>

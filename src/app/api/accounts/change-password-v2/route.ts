@@ -1,57 +1,27 @@
 import { cookies } from 'next/headers'
-import jwt from 'jsonwebtoken'
-import { ChangePasswordV2BodyType } from '@/schemaValidations/account.schema'
+import { ChangePasswordV2Body, ChangePasswordV2BodyType } from '@/schemaValidations/account.schema'
 import accountApiRequest from '@/apiRequests/account'
+import { setAuthCookies } from '@/lib/cookie-utils'
+import { createApiResponse, validateRequestBody } from '@/lib/api-helpers'
 
 export async function PUT(request: Request) {
   const cookieStore = await cookies()
-  const body = (await request.json()) as ChangePasswordV2BodyType
   const accessToken = cookieStore.get('accessToken')?.value
   if (!accessToken) {
-    return Response.json(
-      {
-        message: 'Không tìm thấy accessToken'
-      },
-      {
-        status: 401
-      }
-    )
+    return createApiResponse({ message: 'Không tìm thấy accessToken' }, 401)
   }
+  const validation = await validateRequestBody<ChangePasswordV2BodyType>(request, ChangePasswordV2Body)
+  if (validation.error) return validation.error
   try {
-    const { payload } = await accountApiRequest.sChangePasswordV2(accessToken, body)
-
-    const decodedAccessToken = jwt.decode(payload.data.accessToken) as {
-      exp: number
-    }
-    const decodedRefreshToken = jwt.decode(payload.data.refreshToken) as {
-      exp: number
-    }
-    cookieStore.set('accessToken', payload.data.accessToken, {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: true,
-      expires: decodedAccessToken.exp * 1000
-    })
-    cookieStore.set('refreshToken', payload.data.refreshToken, {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: true,
-      expires: decodedRefreshToken.exp * 1000
-    })
+    const { payload } = await accountApiRequest.sChangePasswordV2(accessToken, validation.data)
+    await setAuthCookies(payload.data.accessToken, payload.data.refreshToken)
     return Response.json(payload)
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (process.env.NODE_ENV === 'development') {
       console.error('Change password error:', error)
     }
-    return Response.json(
-      {
-        message: error.message ?? 'Có lỗi xảy ra'
-      },
-      {
-        status: error.status ?? 500
-      }
-    )
+    const message = error instanceof Error ? error.message : 'Có lỗi xảy ra'
+    const status = (error as { status?: number }).status ?? 500
+    return createApiResponse({ message }, status)
   }
 }

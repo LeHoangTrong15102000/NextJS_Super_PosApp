@@ -14,7 +14,7 @@ import { useSearchParams, useParams } from 'next/navigation'
 import { useEffect } from 'react'
 import { useGuestLoginMutation } from '@/queries/useGuest'
 import { useAppStore } from '@/components/app-provider'
-import { generateSocketInstace, handleErrorApi } from '@/lib/utils'
+import { generateSocketInstance, handleErrorApi } from '@/lib/utils'
 import { useRouter } from '@/i18n/routing'
 
 export default function GuestLoginForm() {
@@ -46,7 +46,7 @@ export default function GuestLoginForm() {
     try {
       const result = await loginMutation.mutateAsync(values)
       setRole(result.payload.data.guest.role)
-      setSocket(generateSocketInstace(result.payload.data.accessToken))
+      setSocket(generateSocketInstance(result.payload.data.accessToken))
       router.push('/guest/menu')
     } catch (error) {
       handleErrorApi({

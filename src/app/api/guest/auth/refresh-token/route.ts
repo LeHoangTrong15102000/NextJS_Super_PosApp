@@ -1,55 +1,23 @@
 import { cookies } from 'next/headers'
-import jwt from 'jsonwebtoken'
 import guestApiRequest from '@/apiRequests/guest'
+import { setAuthCookies } from '@/lib/cookie-utils'
+import { createApiResponse } from '@/lib/api-helpers'
 
 export async function POST(request: Request) {
   const cookieStore = await cookies()
   const refreshToken = cookieStore.get('refreshToken')?.value
   if (!refreshToken) {
-    return Response.json(
-      {
-        message: 'Không tìm thấy refreshToken'
-      },
-      {
-        status: 401
-      }
-    )
+    return createApiResponse({ message: 'Không tìm thấy refreshToken' }, 401)
   }
   try {
-    const { payload } = await guestApiRequest.sRefreshToken({
-      refreshToken
-    })
-
-    const decodedAccessToken = jwt.decode(payload.data.accessToken) as {
-      exp: number
-    }
-    const decodedRefreshToken = jwt.decode(payload.data.refreshToken) as {
-      exp: number
-    }
-    cookieStore.set('accessToken', payload.data.accessToken, {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: true,
-      expires: decodedAccessToken.exp * 1000
-    })
-    cookieStore.set('refreshToken', payload.data.refreshToken, {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: true,
-      expires: decodedRefreshToken.exp * 1000
-    })
+    const { payload } = await guestApiRequest.sRefreshToken({ refreshToken })
+    await setAuthCookies(payload.data.accessToken, payload.data.refreshToken)
     return Response.json(payload)
-  } catch (error: any) {
-    console.log(error)
-    return Response.json(
-      {
-        message: error.message ?? 'Có lỗi xảy ra'
-      },
-      {
-        status: 401
-      }
-    )
+  } catch (error: unknown) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Guest refresh token error:', error)
+    }
+    const message = error instanceof Error ? error.message : 'Có lỗi xảy ra'
+    return createApiResponse({ message }, 401)
   }
 }

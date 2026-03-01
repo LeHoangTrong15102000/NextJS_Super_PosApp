@@ -16,33 +16,29 @@ function LogoutComponent() {
   const disconnectSocket = useAppStore((state) => state.disconnectSocket)
   const setRole = useAppStore((state) => state.setRole)
   const searchParams = useSearchParams()
-  const refreshTokenFromUrl = searchParams.get('refreshToken')
-  const accessTokenFromUrl = searchParams.get('accessToken')
-  const ref = useRef<any>(null)
+  const clearTokens = searchParams.get('clearTokens')
+  const ref = useRef<(() => Promise<unknown>) | null>(null)
   useEffect(() => {
     if (
       !ref.current &&
-      ((refreshTokenFromUrl &&
-        refreshTokenFromUrl === getRefreshTokenFromLocalStorage()) ||
-        (accessTokenFromUrl &&
-          accessTokenFromUrl === getAccessTokenFromLocalStorage()))
+      clearTokens &&
+      (getRefreshTokenFromLocalStorage() || getAccessTokenFromLocalStorage())
     ) {
       ref.current = mutateAsync
-      mutateAsync().then((res) => {
+      mutateAsync().then(() => {
         setTimeout(() => {
           ref.current = null
         }, 1000)
         setRole()
         disconnectSocket()
       })
-    } else if (accessTokenFromUrl !== getAccessTokenFromLocalStorage()) {
+    } else if (!clearTokens) {
       router.push('/')
     }
   }, [
     mutateAsync,
     router,
-    refreshTokenFromUrl,
-    accessTokenFromUrl,
+    clearTokens,
     setRole,
     disconnectSocket
   ])

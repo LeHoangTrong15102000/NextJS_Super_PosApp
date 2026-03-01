@@ -4,17 +4,17 @@ import { useAppStore } from '@/components/app-provider'
 import { checkAndRefreshToken } from '@/lib/utils'
 import { usePathname, useRouter } from '@/i18n/routing'
 import { useEffect } from 'react'
+import { UNAUTHENTICATED_PATHS } from '@/constants/routes'
+import { REFRESH_CHECK_INTERVAL } from '@/constants/config'
 
-// Những page sau sẽ không check refesh token
-const UNAUTHENTICATED_PATH = ['/login', '/logout', '/refresh-token']
 export default function RefreshToken() {
   const pathname = usePathname()
   const router = useRouter()
   const socket = useAppStore((state) => state.socket)
   const disconnectSocket = useAppStore((state) => state.disconnectSocket)
   useEffect(() => {
-    if (UNAUTHENTICATED_PATH.includes(pathname)) return
-    let interval: any = null
+    if (UNAUTHENTICATED_PATHS.includes(pathname)) return
+    let interval: ReturnType<typeof setInterval> | null = null
     // Phải gọi lần đầu tiên, vì interval sẽ chạy sau thời gian TIMEOUT
     const onRefreshToken = (force?: boolean) => {
       checkAndRefreshToken({
@@ -30,8 +30,7 @@ export default function RefreshToken() {
     onRefreshToken()
     // Timeout interval phải bé hơn thời gian hết hạn của access token
     // Ví dụ thời gian hết hạn access token là 10s thì 1s mình sẽ cho check 1 lần
-    const TIMEOUT = 1000
-    interval = setInterval(onRefreshToken, TIMEOUT)
+    interval = setInterval(onRefreshToken, REFRESH_CHECK_INTERVAL)
 
     if (socket?.connected) {
       onConnect()
