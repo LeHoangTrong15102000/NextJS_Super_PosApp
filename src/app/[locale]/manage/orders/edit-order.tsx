@@ -61,7 +61,7 @@ export default function EditOrder({
   })
 
   const form = useForm<UpdateOrderBodyType>({
-    resolver: zodResolver(UpdateOrderBody),
+    resolver: zodResolver(UpdateOrderBody) as any,
     defaultValues: {
       status: OrderStatus.Pending,
       dishId: 0,

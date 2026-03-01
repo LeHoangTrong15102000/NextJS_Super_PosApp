@@ -1,7 +1,7 @@
 import { toast } from '@/components/ui/use-toast'
 import { EntityError } from '@/lib/http'
 import { type ClassValue, clsx } from 'clsx'
-import { FieldValues, UseFormSetError } from 'react-hook-form'
+import { FieldValues, Path, UseFormSetError } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 import { jwtDecode } from 'jwt-decode'
 import authApiRequest from '@/apiRequests/auth'
@@ -24,18 +24,18 @@ export const normalizePath = (path: string) => {
   return path.startsWith('/') ? path.slice(1) : path
 }
 
-export const handleErrorApi = ({
+export const handleErrorApi = <T extends FieldValues = FieldValues>({
   error,
   setError,
   duration
 }: {
   error: unknown
-  setError?: UseFormSetError<FieldValues>
+  setError?: UseFormSetError<T>
   duration?: number
 }) => {
   if (error instanceof EntityError && setError) {
     error.payload.errors.forEach((item) => {
-      setError(item.field, {
+      setError(item.field as Path<T>, {
         type: 'server',
         message: item.message
       })

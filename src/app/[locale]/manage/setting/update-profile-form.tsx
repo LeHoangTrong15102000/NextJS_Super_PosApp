@@ -25,7 +25,7 @@ export default function UpdateProfileForm() {
   const updateMeMutation = useUpdateMeMutation()
   const uploadMediaMutation = useUploadMediaMutation()
   const form = useForm<UpdateMeBodyType>({
-    resolver: zodResolver(UpdateMeBody),
+    resolver: zodResolver(UpdateMeBody) as any,
     defaultValues: {
       name: '',
       avatar: undefined

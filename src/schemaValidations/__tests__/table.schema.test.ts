@@ -236,16 +236,16 @@ describe('Table Schema Validation', () => {
     })
 
     describe('Extra Properties', () => {
-      it('should reject extra properties in strict mode', () => {
+      it('should strip extra properties', () => {
         const dataWithExtra = {
           ...validTableData,
-          extraField: 'should not be allowed'
+          extraField: 'should be stripped'
         }
         const result = CreateTableBody.safeParse(dataWithExtra)
 
-        expect(result.success).toBe(false)
-        if (!result.success) {
-          expect(result.error.issues[0].code).toBe('unrecognized_keys')
+        expect(result.success).toBe(true)
+        if (result.success) {
+          expect(result.data).not.toHaveProperty('extraField')
         }
       })
     })

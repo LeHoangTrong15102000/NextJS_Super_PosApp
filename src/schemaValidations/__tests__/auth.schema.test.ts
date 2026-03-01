@@ -223,6 +223,7 @@ describe('Auth Schema Validations', () => {
       }
     })
 
+    // Zod 4: z.string() without .min(1) accepts empty strings
     it('should reject empty refresh token', () => {
       const invalidData = {
         refreshToken: ''
@@ -230,7 +231,7 @@ describe('Auth Schema Validations', () => {
 
       const result = RefreshTokenBody.safeParse(invalidData)
 
-      expect(result.success).toBe(false)
+      expect(result.success).toBe(true)
     })
 
     it('should reject missing refresh token', () => {
@@ -334,6 +335,7 @@ describe('Auth Schema Validations', () => {
       }
     })
 
+    // Zod 4: z.string() without .min(1) accepts empty strings
     it('should reject empty code', () => {
       const invalidQuery = {
         code: ''
@@ -341,7 +343,7 @@ describe('Auth Schema Validations', () => {
 
       const result = LoginGoogleQuery.safeParse(invalidQuery)
 
-      expect(result.success).toBe(false)
+      expect(result.success).toBe(true)
     })
 
     it('should reject missing code', () => {

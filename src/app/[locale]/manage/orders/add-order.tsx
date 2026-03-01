@@ -42,7 +42,7 @@ export default function AddOrder() {
   const createGuestMutation = useCreateGuestMutation()
 
   const form = useForm<GuestLoginBodyType>({
-    resolver: zodResolver(GuestLoginBody),
+    resolver: zodResolver(GuestLoginBody) as any,
     defaultValues: {
       name: '',
       tableNumber: 0

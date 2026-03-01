@@ -54,7 +54,7 @@ export default function EditTable({
   const updateTableMutation = useUpdateTableMutation()
 
   const form = useForm<UpdateTableBodyType>({
-    resolver: zodResolver(UpdateTableBody),
+    resolver: zodResolver(UpdateTableBody) as any,
     defaultValues: {
       capacity: 2,
       status: TableStatus.Hidden,

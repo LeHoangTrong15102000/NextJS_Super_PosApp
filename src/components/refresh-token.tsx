@@ -19,7 +19,7 @@ export default function RefreshToken() {
     const onRefreshToken = (force?: boolean) => {
       checkAndRefreshToken({
         onError: () => {
-          clearInterval(interval)
+          if (interval) clearInterval(interval)
           disconnectSocket()
           router.push('/login')
         },
@@ -55,7 +55,7 @@ export default function RefreshToken() {
     socket?.on('disconnect', onDisconnect)
     socket?.on('refresh-token', onRefreshTokenSocket)
     return () => {
-      clearInterval(interval)
+      if (interval) clearInterval(interval)
       socket?.off('connect', onConnect)
       socket?.off('disconnect', onDisconnect)
       socket?.off('refresh-token', onRefreshTokenSocket)

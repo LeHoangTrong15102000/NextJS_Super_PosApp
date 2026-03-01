@@ -192,7 +192,7 @@ describe('useTable Hooks', () => {
     it('should not fetch when disabled', () => {
       const { result } = renderHook(() => useGetTableQuery({ id: 5, enabled: false }), { wrapper: createWrapper() })
 
-      expect(result.current.isIdle).toBe(true)
+      expect(result.current.fetchStatus).toBe('idle')
       expect(result.current.data).toBeUndefined()
       expect(mockTableApiRequest.getTable).not.toHaveBeenCalled()
     })
@@ -220,7 +220,7 @@ describe('useTable Hooks', () => {
       })
 
       // Initially disabled
-      expect(result.current.isIdle).toBe(true)
+      expect(result.current.fetchStatus).toBe('idle')
       expect(mockTableApiRequest.getTable).not.toHaveBeenCalled()
 
       // Enable the query
@@ -268,11 +268,11 @@ describe('useTable Hooks', () => {
       })
 
       expect(result.current.data).toEqual(mockAddResponse)
-      expect(mockTableApiRequest.add).toHaveBeenCalledWith(newTableData)
+      expect(mockTableApiRequest.add).toHaveBeenCalledWith(newTableData, expect.anything())
       expect(mockTableApiRequest.add).toHaveBeenCalledTimes(1)
     })
 
-    it('should handle loading state during table creation', () => {
+    it('should handle loading state during table creation', async () => {
       mockTableApiRequest.add.mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)))
 
       const { result } = renderHook(() => useAddTableMutation(), {
@@ -285,7 +285,9 @@ describe('useTable Hooks', () => {
         status: TableStatus.Available
       })
 
-      expect(result.current.isPending).toBe(true)
+      await waitFor(() => {
+        expect(result.current.isPending).toBe(true)
+      })
     })
 
     it('should handle error during table creation', async () => {
@@ -611,7 +613,7 @@ describe('useTable Hooks', () => {
       })
 
       expect(result.current.data).toEqual(mockDeleteResponse)
-      expect(mockTableApiRequest.deleteTable).toHaveBeenCalledWith(5)
+      expect(mockTableApiRequest.deleteTable).toHaveBeenCalledWith(5, expect.anything())
       expect(mockTableApiRequest.deleteTable).toHaveBeenCalledTimes(1)
     })
 
@@ -690,8 +692,8 @@ describe('useTable Hooks', () => {
       })
 
       expect(mockTableApiRequest.deleteTable).toHaveBeenCalledTimes(2)
-      expect(mockTableApiRequest.deleteTable).toHaveBeenNthCalledWith(1, 1)
-      expect(mockTableApiRequest.deleteTable).toHaveBeenNthCalledWith(2, 2)
+      expect(mockTableApiRequest.deleteTable).toHaveBeenNthCalledWith(1, 1, expect.anything())
+      expect(mockTableApiRequest.deleteTable).toHaveBeenNthCalledWith(2, 2, expect.anything())
     })
   })
 

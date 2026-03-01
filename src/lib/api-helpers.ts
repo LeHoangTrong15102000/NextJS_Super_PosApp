@@ -21,7 +21,7 @@ export async function validateRequestBody<T>(
     if (!result.success) {
       return {
         error: createApiResponse(
-          { message: 'Invalid request body', errors: result.error.errors },
+          { message: 'Invalid request body', errors: result.error.issues },
           400
         )
       }

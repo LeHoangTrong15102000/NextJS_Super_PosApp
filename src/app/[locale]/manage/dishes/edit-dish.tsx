@@ -41,7 +41,7 @@ export default function EditDish({
   const updateDishMutation = useUpdateDishMutation()
   const { data } = useGetDishQuery({ enabled: Boolean(id), id: id as number })
   const form = useForm<UpdateDishBodyType>({
-    resolver: zodResolver(UpdateDishBody),
+    resolver: zodResolver(UpdateDishBody) as any,
     defaultValues: {
       name: '',
       description: '',

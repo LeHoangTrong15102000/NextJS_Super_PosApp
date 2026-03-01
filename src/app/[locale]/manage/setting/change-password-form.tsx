@@ -21,7 +21,7 @@ import {
 export default function ChangePasswordForm() {
   const changePasswordMutation = useChangePasswordMutation()
   const form = useForm<ChangePasswordBodyType>({
-    resolver: zodResolver(ChangePasswordBody),
+    resolver: zodResolver(ChangePasswordBody) as any,
     defaultValues: {
       oldPassword: '',
       password: '',

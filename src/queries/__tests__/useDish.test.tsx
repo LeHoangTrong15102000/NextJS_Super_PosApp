@@ -166,7 +166,7 @@ describe('useDish Hooks', () => {
     it('should not fetch when disabled', () => {
       const { result } = renderHook(() => useGetDishQuery({ id: 1, enabled: false }), { wrapper: createWrapper() })
 
-      expect(result.current.isIdle).toBe(true)
+      expect(result.current.fetchStatus).toBe('idle')
       expect(result.current.data).toBeUndefined()
       expect(mockDishApiRequest.getDish).not.toHaveBeenCalled()
     })
@@ -194,7 +194,7 @@ describe('useDish Hooks', () => {
       })
 
       // Initially disabled
-      expect(result.current.isIdle).toBe(true)
+      expect(result.current.fetchStatus).toBe('idle')
       expect(mockDishApiRequest.getDish).not.toHaveBeenCalled()
 
       // Enable the query
@@ -239,11 +239,11 @@ describe('useDish Hooks', () => {
       })
 
       expect(result.current.data).toEqual(mockAddResponse)
-      expect(mockDishApiRequest.add).toHaveBeenCalledWith(newDishData)
+      expect(mockDishApiRequest.add).toHaveBeenCalledWith(newDishData, expect.anything())
       expect(mockDishApiRequest.add).toHaveBeenCalledTimes(1)
     })
 
-    it('should handle loading state during dish creation', () => {
+    it('should handle loading state during dish creation', async () => {
       mockDishApiRequest.add.mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)))
 
       const { result } = renderHook(() => useAddDishMutation(), {
@@ -257,7 +257,9 @@ describe('useDish Hooks', () => {
         image: 'https://example.com/test.jpg'
       })
 
-      expect(result.current.isPending).toBe(true)
+      await waitFor(() => {
+        expect(result.current.isPending).toBe(true)
+      })
     })
 
     it('should handle error during dish creation', async () => {
@@ -448,7 +450,7 @@ describe('useDish Hooks', () => {
       })
 
       expect(result.current.data).toEqual(mockDeleteResponse)
-      expect(mockDishApiRequest.deleteDish).toHaveBeenCalledWith(1)
+      expect(mockDishApiRequest.deleteDish).toHaveBeenCalledWith(1, expect.anything())
       expect(mockDishApiRequest.deleteDish).toHaveBeenCalledTimes(1)
     })
 
@@ -527,8 +529,8 @@ describe('useDish Hooks', () => {
       })
 
       expect(mockDishApiRequest.deleteDish).toHaveBeenCalledTimes(2)
-      expect(mockDishApiRequest.deleteDish).toHaveBeenNthCalledWith(1, 1)
-      expect(mockDishApiRequest.deleteDish).toHaveBeenNthCalledWith(2, 2)
+      expect(mockDishApiRequest.deleteDish).toHaveBeenNthCalledWith(1, 1, expect.anything())
+      expect(mockDishApiRequest.deleteDish).toHaveBeenNthCalledWith(2, 2, expect.anything())
     })
   })
 

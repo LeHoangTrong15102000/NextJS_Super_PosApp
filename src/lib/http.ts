@@ -141,7 +141,7 @@ const request = async <Response>(
         })
       }
     } else {
-      throw new HttpError(data)
+      throw new HttpError(data as { status: number; payload: Record<string, unknown> })
     }
   }
   // Đảm bảo logic dưới đây chỉ chạy ở phía client (browser), Do cái http này chạy ở cả cient-com và server-com luôn
@@ -170,10 +170,10 @@ const http = {
     return request<Response>('GET', url, options)
   },
   post<Response>(url: string, body: unknown, options?: Omit<CustomOptions, 'body'> | undefined) {
-    return request<Response>('POST', url, { ...options, body })
+    return request<Response>('POST', url, { ...options, body } as CustomOptions)
   },
   put<Response>(url: string, body: unknown, options?: Omit<CustomOptions, 'body'> | undefined) {
-    return request<Response>('PUT', url, { ...options, body })
+    return request<Response>('PUT', url, { ...options, body } as CustomOptions)
   },
   delete<Response>(url: string, options?: Omit<CustomOptions, 'body'> | undefined) {
     return request<Response>('DELETE', url, { ...options })

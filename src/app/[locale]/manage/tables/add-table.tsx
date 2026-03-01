@@ -41,7 +41,7 @@ export default function AddTable() {
   const [open, setOpen] = useState(false)
   const addTableMutation = useAddTableMutation()
   const form = useForm<CreateTableBodyType>({
-    resolver: zodResolver(CreateTableBody),
+    resolver: zodResolver(CreateTableBody) as any,
     defaultValues: {
       number: 0,
       capacity: 2,

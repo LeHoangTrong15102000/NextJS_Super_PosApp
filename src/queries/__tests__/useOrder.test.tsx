@@ -249,7 +249,7 @@ describe('useOrder Hooks', () => {
         wrapper: createWrapper()
       })
 
-      expect(result.current.isIdle).toBe(true)
+      expect(result.current.fetchStatus).toBe('idle')
       expect(result.current.data).toBeUndefined()
       expect(mockOrderApiRequest.getOrderDetail).not.toHaveBeenCalled()
     })
@@ -302,11 +302,11 @@ describe('useOrder Hooks', () => {
       })
 
       expect(result.current.data).toEqual(mockResponse)
-      expect(mockOrderApiRequest.createOrders).toHaveBeenCalledWith(orderData)
+      expect(mockOrderApiRequest.createOrders).toHaveBeenCalledWith(orderData, expect.anything())
       expect(mockOrderApiRequest.createOrders).toHaveBeenCalledTimes(1)
     })
 
-    it('should handle loading state during order creation', () => {
+    it('should handle loading state during order creation', async () => {
       mockOrderApiRequest.createOrders.mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)))
 
       const { result } = renderHook(() => useCreateOrderMutation(), {
@@ -318,7 +318,9 @@ describe('useOrder Hooks', () => {
         orders: [{ dishId: 1, quantity: 1 }]
       })
 
-      expect(result.current.isPending).toBe(true)
+      await waitFor(() => {
+        expect(result.current.isPending).toBe(true)
+      })
     })
 
     it('should handle error during order creation', async () => {
@@ -370,7 +372,7 @@ describe('useOrder Hooks', () => {
         expect(result.current.isSuccess).toBe(true)
       })
 
-      expect(mockOrderApiRequest.createOrders).toHaveBeenCalledWith(validOrderData)
+      expect(mockOrderApiRequest.createOrders).toHaveBeenCalledWith(validOrderData, expect.anything())
     })
   })
 
@@ -541,7 +543,7 @@ describe('useOrder Hooks', () => {
       expect(mockOrderApiRequest.pay).toHaveBeenCalledTimes(1)
     })
 
-    it('should handle loading state during payment', () => {
+    it('should handle loading state during payment', async () => {
       mockOrderApiRequest.pay.mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)))
 
       const { result } = renderHook(() => usePayForGuestMutation(), {
@@ -550,7 +552,9 @@ describe('useOrder Hooks', () => {
 
       result.current.mutate({ guestId: 1 })
 
-      expect(result.current.isPending).toBe(true)
+      await waitFor(() => {
+        expect(result.current.isPending).toBe(true)
+      })
     })
 
     it('should handle payment error', async () => {

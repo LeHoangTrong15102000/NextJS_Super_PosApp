@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken'
 import { TokenPayload } from '@/types/jwt.types'
-import envConfig from '@/config'
 
 export interface DecodedTokenExpiry {
   exp: number
@@ -11,7 +10,7 @@ export interface DecodedTokenExpiry {
  * Throws if the token is invalid, expired, or has a bad signature.
  */
 export function verifyToken<T = TokenPayload>(token: string, secret?: string): T {
-  return jwt.verify(token, secret ?? envConfig.JWT_SECRET) as T
+  return jwt.verify(token, secret ?? process.env.JWT_SECRET!) as T
 }
 
 /**

@@ -69,7 +69,7 @@ describe('useAuth Hooks', () => {
         expect(result.current.isSuccess).toBe(true)
       })
 
-      expect(mockAuthApiRequest.login).toHaveBeenCalledWith(loginData)
+      expect(mockAuthApiRequest.login).toHaveBeenCalledWith(loginData, expect.anything())
       expect(result.current.data).toEqual(mockLoginResponse)
     })
 
@@ -92,7 +92,7 @@ describe('useAuth Hooks', () => {
         expect(result.current.isError).toBe(true)
       })
 
-      expect(mockAuthApiRequest.login).toHaveBeenCalledWith(loginData)
+      expect(mockAuthApiRequest.login).toHaveBeenCalledWith(loginData, expect.anything())
       expect(result.current.error).toEqual(mockError)
     })
 
@@ -146,8 +146,10 @@ describe('useAuth Hooks', () => {
         password: 'password123'
       })
 
-      // Should be pending immediately after mutation
-      expect(result.current.isPending).toBe(true)
+      // Should be pending after mutation starts
+      await waitFor(() => {
+        expect(result.current.isPending).toBe(true)
+      })
       expect(result.current.isIdle).toBe(false)
 
       await waitFor(() => {
@@ -178,7 +180,7 @@ describe('useAuth Hooks', () => {
         expect(result.current.isSuccess).toBe(true)
       })
 
-      expect(mockAuthApiRequest.logout).toHaveBeenCalledWith()
+      expect(mockAuthApiRequest.logout).toHaveBeenCalledWith(undefined, expect.anything())
       expect(result.current.data).toEqual(mockLogoutResponse)
     })
 
@@ -196,7 +198,7 @@ describe('useAuth Hooks', () => {
         expect(result.current.isError).toBe(true)
       })
 
-      expect(mockAuthApiRequest.logout).toHaveBeenCalledWith()
+      expect(mockAuthApiRequest.logout).toHaveBeenCalledWith(undefined, expect.anything())
       expect(result.current.error).toEqual(mockError)
     })
 
@@ -216,7 +218,7 @@ describe('useAuth Hooks', () => {
       })
 
       // Verify logout was called without any arguments
-      expect(mockAuthApiRequest.logout).toHaveBeenCalledWith()
+      expect(mockAuthApiRequest.logout).toHaveBeenCalledWith(undefined, expect.anything())
       expect(mockAuthApiRequest.logout).toHaveBeenCalledTimes(1)
     })
   })
@@ -246,7 +248,7 @@ describe('useAuth Hooks', () => {
         expect(result.current.isSuccess).toBe(true)
       })
 
-      expect(mockAuthApiRequest.setTokenToCookie).toHaveBeenCalledWith(tokenData)
+      expect(mockAuthApiRequest.setTokenToCookie).toHaveBeenCalledWith(tokenData, expect.anything())
       expect(result.current.data).toEqual(mockTokenResponse)
     })
 
@@ -269,7 +271,7 @@ describe('useAuth Hooks', () => {
         expect(result.current.isError).toBe(true)
       })
 
-      expect(mockAuthApiRequest.setTokenToCookie).toHaveBeenCalledWith(tokenData)
+      expect(mockAuthApiRequest.setTokenToCookie).toHaveBeenCalledWith(tokenData, expect.anything())
       expect(result.current.error).toEqual(mockError)
     })
 
@@ -297,7 +299,8 @@ describe('useAuth Hooks', () => {
         expect.objectContaining({
           accessToken: expect.any(String),
           refreshToken: expect.any(String)
-        })
+        }),
+        expect.anything()
       )
     })
   })
@@ -338,7 +341,9 @@ describe('useAuth Hooks', () => {
       // Reset the mutation
       result.current.reset()
 
-      expect(result.current.isIdle).toBe(true)
+      await waitFor(() => {
+        expect(result.current.isIdle).toBe(true)
+      })
       expect(result.current.isSuccess).toBe(false)
       expect(result.current.data).toBeUndefined()
       expect(result.current.error).toBeNull()
