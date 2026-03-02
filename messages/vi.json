@@ -36,6 +36,10 @@
     "title": "Quản lý tài khoản",
     "description": "Quản lý tài khoản nhân viên"
   },
+  "ManageGuests": {
+    "title": "Quản lý khách hàng",
+    "description": "Quản lý danh sách khách hàng"
+  },
   "Dashboard": {
     "title": "Bảng điều khiển",
     "description": "Xem và phân tích dữ liệu bán hàng"

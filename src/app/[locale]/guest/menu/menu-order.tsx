@@ -94,16 +94,26 @@ export default function MenuOrder() {
             </div>
           </div>
         ))}
-      <div className='sticky bottom-0'>
-        <Button
-          className='w-full justify-between'
-          onClick={handleOrder}
-          disabled={orders.length === 0}
-        >
-          <span>Đặt hàng · {orders.length} món</span>
-          <span>{formatCurrency(totalPrice)}</span>
-        </Button>
-      </div>
+      {orders.length > 0 && (
+        <div className='sticky bottom-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t p-3 -mx-4 px-4 shadow-lg'>
+          <div className='flex items-center justify-between mb-2'>
+            <div className='flex items-center gap-2'>
+              <span className='text-sm font-medium'>{orders.length} món</span>
+              <span className='text-xs text-muted-foreground'>
+                ({orders.reduce((sum, o) => sum + o.quantity, 0)} phần)
+              </span>
+            </div>
+            <span className='text-lg font-bold'>{formatCurrency(totalPrice)}</span>
+          </div>
+          <Button
+            className='w-full'
+            onClick={handleOrder}
+            size='lg'
+          >
+            Đặt hàng
+          </Button>
+        </div>
+      )}
     </>
   )
 }

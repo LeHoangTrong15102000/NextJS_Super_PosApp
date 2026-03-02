@@ -48,6 +48,7 @@
     "nextjs-toploader": "^3.9.17",
     "qrcode": "^1.5.4",
     "query-string": "^9.3.1",
+    "radix-ui": "^1.4.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-hook-form": "^7.71.2",

@@ -5,7 +5,7 @@ import { TokenPayload } from '@/types/jwt.types'
 import createMiddleware from 'next-intl/middleware'
 import { defaultLocale } from '@/config'
 import { routing } from './i18n/routing'
-import { verifyToken } from '@/lib/jwt-utils'
+import jwt from 'jsonwebtoken'
 import {
   MANAGE_PATHS,
   GUEST_PATHS,
@@ -15,8 +15,14 @@ import {
   LOGIN_PATHS
 } from '@/constants/routes'
 
+/**
+ * Decode JWT token payload without signature verification.
+ * We use decode (not verify) because tokens are signed by the external API server
+ * (api-bigboy.duthanhduoc.com) with its own secret. Our Next.js app only needs
+ * to read the payload (role, exp) for routing decisions.
+ */
 const decodeToken = (token: string) => {
-  return verifyToken<TokenPayload>(token)
+  return jwt.decode(token) as TokenPayload
 }
 
 type MiddlewareContext = {
@@ -44,11 +50,18 @@ function handlePrivateRoutes(ctx: MiddlewareContext): NextResponse | null {
 /** 2.1 Redirect authenticated users away from login pages */
 function handleAuthRedirects(ctx: MiddlewareContext): NextResponse | null {
   if (UNAUTH_PATHS.some((path) => ctx.pathname.startsWith(path))) {
+    // Allow through when clearing tokens or when accessToken param is present (server-side logout flow)
     if (
       LOGIN_PATHS.some((path) => ctx.pathname.startsWith(path)) &&
-      ctx.searchParams.get('clearTokens')
+      (ctx.searchParams.get('clearTokens') || ctx.searchParams.get('accessToken'))
     ) {
-      return null // Allow through — clearing tokens
+      return null
+    }
+    // Check if refreshToken is still valid (not expired) before redirecting
+    // If token is expired/invalid, allow user to access login page
+    const decoded = decodeToken(ctx.refreshToken!)
+    if (!decoded || decoded.exp * 1000 < Date.now()) {
+      return null // Token expired — allow access to login
     }
     return NextResponse.redirect(new URL(`/${ctx.locale}`, ctx.request.url))
   }

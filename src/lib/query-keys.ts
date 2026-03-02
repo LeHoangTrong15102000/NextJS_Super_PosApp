@@ -7,6 +7,7 @@ export const queryKeys = {
     detail: (id: number) => ['accounts', id] as const
   },
   guests: {
+    all: ['guests'] as const,
     list: (queryParams: unknown) => ['guests', queryParams] as const
   },
   guestOrders: {

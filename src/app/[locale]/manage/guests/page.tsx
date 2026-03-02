@@ -5,25 +5,25 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card'
-import TableTable from '@/app/[locale]/manage/tables/table-table'
-import TableViewToggle from '@/app/[locale]/manage/tables/table-view-toggle'
+import GuestTable from '@/app/[locale]/manage/guests/guest-table'
 import { Suspense } from 'react'
-import { Metadata } from 'next'
 import envConfig, { Locale } from '@/config'
+import { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
+
 type Props = {
   params: Promise<{ locale: Locale }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const params = await props.params;
+  const params = await props.params
   const t = await getTranslations({
     locale: params.locale,
-    namespace: 'Tables'
+    namespace: 'ManageGuests'
   })
 
-  const url = envConfig.NEXT_PUBLIC_URL + `/${params.locale}/manage/tables`
+  const url = envConfig.NEXT_PUBLIC_URL + `/${params.locale}/manage/guests`
 
   return {
     title: t('title'),
@@ -37,18 +37,18 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   }
 }
 
-export default function TablesPage() {
+export default function GuestsPage() {
   return (
     <main className='grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8'>
       <div className='space-y-2'>
         <Card x-chunk='dashboard-06-chunk-0'>
           <CardHeader>
-            <CardTitle>Bàn ăn</CardTitle>
-            <CardDescription>Quản lý bàn ăn</CardDescription>
+            <CardTitle>Khách hàng</CardTitle>
+            <CardDescription>Quản lý khách hàng</CardDescription>
           </CardHeader>
           <CardContent>
             <Suspense>
-              <TableViewToggle />
+              <GuestTable />
             </Suspense>
           </CardContent>
         </Card>
@@ -56,3 +56,4 @@ export default function TablesPage() {
     </main>
   )
 }
+

@@ -67,6 +67,34 @@ export function useOrderTable() {
     }
   }
 
+  const [bulkUpdating, setBulkUpdating] = useState(false)
+
+  const bulkChangeStatus = async (status: (typeof OrderStatusValues)[number]) => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows
+    if (selectedRows.length === 0) return
+    setBulkUpdating(true)
+    const results = await Promise.allSettled(
+      selectedRows.map((row) =>
+        updateOrderMutation.mutateAsync({
+          orderId: row.original.id,
+          dishId: row.original.dishSnapshot.dishId ?? row.original.dishSnapshot.id,
+          status,
+          quantity: row.original.quantity
+        })
+      )
+    )
+    const succeeded = results.filter((r) => r.status === 'fulfilled').length
+    const failed = results.filter((r) => r.status === 'rejected').length
+    if (failed > 0) {
+      toast({ description: `Cập nhật ${succeeded} thành công, ${failed} thất bại`, variant: 'destructive' })
+    } else {
+      toast({ description: `Đã cập nhật ${succeeded} đơn sang "${getVietnameseOrderStatus(status)}"` })
+    }
+    table.resetRowSelection()
+    setBulkUpdating(false)
+    refetchOrderList()
+  }
+
   const table = useReactTable({
     data: orderList,
     columns: orderTableColumns,
@@ -145,7 +173,7 @@ export function useOrderTable() {
 
   return {
     table, orderList, orderListQuery, orderIdEdit, setOrderIdEdit,
-    changeStatus, orderObjectByGuestId, statics, servingGuestByTableNumber,
+    changeStatus, bulkChangeStatus, bulkUpdating, orderObjectByGuestId, statics, servingGuestByTableNumber,
     tableListSortedByNumber, fromDate, setFromDate, toDate, setToDate,
     resetDateFilter, openStatusFilter, setOpenStatusFilter
   }

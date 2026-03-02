@@ -34,6 +34,7 @@ import AddDish from '@/app/[locale]/manage/dishes/add-dish'
 import { useDeleteDishMutation } from '@/queries/useDish'
 import { toast } from '@/components/ui/use-toast'
 import { useDishTable } from '@/app/[locale]/manage/dishes/use-dish-table'
+import DishCardMobile from '@/app/[locale]/manage/dishes/dish-card-mobile'
 
 type DishItem = DishListResType['data'][0]
 
@@ -192,7 +193,23 @@ export default function DishTable() {
             <AddDish />
           </div>
         </div>
-        <div className='rounded-md border'>
+        {/* Mobile card view */}
+        <div className='md:hidden space-y-2'>
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+              <DishCardMobile
+                key={row.id}
+                dish={row.original}
+                onEdit={() => setDishIdEdit(row.original.id)}
+                onDelete={() => setDishDelete(row.original)}
+              />
+            ))
+          ) : (
+            <p className='text-center text-muted-foreground py-8'>No results.</p>
+          )}
+        </div>
+        {/* Desktop table view */}
+        <div className='hidden md:block rounded-md border'>
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

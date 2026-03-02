@@ -1,14 +1,18 @@
 import { cookies } from 'next/headers'
-import { verifyTokenExpiry } from '@/lib/jwt-utils'
+import jwt from 'jsonwebtoken'
 import { AUTH_COOKIE_OPTIONS } from '@/constants/config'
+
+interface DecodedTokenExpiry {
+  exp: number
+}
 
 /**
  * Set both accessToken and refreshToken cookies with verified expiry.
  */
 export async function setAuthCookies(accessToken: string, refreshToken: string) {
   const cookieStore = await cookies()
-  const decodedAccessToken = verifyTokenExpiry(accessToken)
-  const decodedRefreshToken = verifyTokenExpiry(refreshToken)
+  const decodedAccessToken = jwt.decode(accessToken) as DecodedTokenExpiry
+  const decodedRefreshToken = jwt.decode(refreshToken) as DecodedTokenExpiry
 
   cookieStore.set('accessToken', accessToken, {
     ...AUTH_COOKIE_OPTIONS,

@@ -21,9 +21,31 @@ import { OrderStatus, OrderStatusValues } from '@/constants/type'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { OrderTableContext } from '@/app/[locale]/manage/orders/order-table'
 import OrderGuestDetail from '@/app/[locale]/manage/orders/order-guest-detail'
+import { Link } from '@/i18n/routing'
+import { ExternalLink } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
 
 type OrderItem = GetOrdersResType['data'][0]
 const orderTableColumns: ColumnDef<OrderItem>[] = [
+  {
+    id: 'select',
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label='Select all'
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label='Select row'
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false
+  },
   {
     accessorKey: 'tableNumber',
     header: 'Bàn',
@@ -184,6 +206,11 @@ const orderTableColumns: ColumnDef<OrderItem>[] = [
           <DropdownMenuContent align='end'>
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href={`/manage/orders/${row.original.id}`} className='flex items-center gap-2'>
+                <ExternalLink className='h-4 w-4' /> Chi tiết
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={openEditOrder}>Sửa</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

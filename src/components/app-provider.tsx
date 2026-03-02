@@ -2,6 +2,7 @@
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import RefreshToken from '@/components/refresh-token'
+import NotificationSocketListener from '@/components/notification-socket-listener'
 import { useEffect, useRef } from 'react'
 import {
   decodeToken,
@@ -79,6 +80,7 @@ export default function AppProvider({ children }: { children: React.ReactNode })
       {children}
       <RefreshToken />
       <ListenLogoutSocket />
+      <NotificationSocketListener />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   )

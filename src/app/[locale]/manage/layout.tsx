@@ -2,6 +2,9 @@ import DarkModeToggle from '@/components/dark-mode-toggle'
 import DropdownAvatar from '@/app/[locale]/manage/dropdown-avatar'
 import NavLinks from '@/app/[locale]/manage/nav-links'
 import MobileNavLinks from '@/app/[locale]/manage/mobile-nav-links'
+import NotificationCenter from '@/components/notification-center'
+import ManageKeyboardShortcuts from '@/components/manage-keyboard-shortcuts'
+import BottomNav from '@/app/[locale]/manage/bottom-nav'
 
 export default function Layout({
   children
@@ -15,14 +18,18 @@ export default function Layout({
         <header className='sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6'>
           <MobileNavLinks />
           <div className='relative ml-auto flex-1 md:grow-0'>
-            <div className='flex justify-end'>
+            <div className='flex items-center justify-end gap-2'>
+              <NotificationCenter />
               <DarkModeToggle />
             </div>
           </div>
           <DropdownAvatar />
         </header>
         {children}
+        <ManageKeyboardShortcuts />
+        <div className='pb-14 md:pb-0' />
       </div>
+      <BottomNav />
     </div>
   )
 }

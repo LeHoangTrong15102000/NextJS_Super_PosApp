@@ -11,7 +11,7 @@ import { getVietnameseOrderStatus } from '@/lib/utils'
 import { OrderStatusValues } from '@/constants/type'
 import OrderStatics from '@/app/[locale]/manage/orders/order-statics'
 import orderTableColumns from '@/app/[locale]/manage/orders/order-table-columns'
-import { Check, ChevronsUpDown } from 'lucide-react'
+import { Check, ChevronsUpDown, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command'
@@ -19,6 +19,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns'
 import TableSkeleton from '@/app/[locale]/manage/orders/table-skeleton'
 import { useOrderTable } from '@/app/[locale]/manage/orders/use-order-table'
+import { exportOrdersCSV } from '@/lib/export-csv'
+import OrderCardMobile from '@/app/[locale]/manage/orders/order-card-mobile'
 
 export const OrderTableContext = createContext({
   setOrderIdEdit: (value: number | undefined) => {},
@@ -43,10 +45,12 @@ export type ServingGuestByTableNumber = Record<number, OrderObjectByGuestID>
 export default function OrderTable() {
   const {
     table, orderList, orderListQuery, orderIdEdit, setOrderIdEdit,
-    changeStatus, orderObjectByGuestId, statics, servingGuestByTableNumber,
+    changeStatus, bulkChangeStatus, bulkUpdating, orderObjectByGuestId, statics, servingGuestByTableNumber,
     tableListSortedByNumber, fromDate, setFromDate, toDate, setToDate,
     resetDateFilter, openStatusFilter, setOpenStatusFilter
   } = useOrderTable()
+
+  const selectedCount = table.getFilteredSelectedRowModel().rows.length
 
   return (
     <OrderTableContext.Provider
@@ -79,7 +83,15 @@ export default function OrderTable() {
               Reset
             </Button>
           </div>
-          <div className='ml-auto'>
+          <div className='ml-auto flex gap-2'>
+            <Button
+              variant='outline'
+              size='sm'
+              disabled={orderList.length === 0}
+              onClick={() => exportOrdersCSV(orderList, fromDate, toDate)}
+            >
+              <Download className='h-4 w-4 mr-1' /> Xuất CSV
+            </Button>
             <AddOrder />
           </div>
         </div>
@@ -149,9 +161,44 @@ export default function OrderTable() {
           tableList={tableListSortedByNumber}
           servingGuestByTableNumber={servingGuestByTableNumber}
         />
+        {selectedCount > 0 && (
+          <div className='flex items-center gap-2 p-3 bg-muted rounded-lg'>
+            <span className='text-sm font-medium'>Đã chọn {selectedCount} đơn</span>
+            <div className='flex gap-1 ml-auto'>
+              {OrderStatusValues.map((status) => (
+                <Button
+                  key={status}
+                  size='sm'
+                  variant='outline'
+                  className='text-xs'
+                  disabled={bulkUpdating}
+                  onClick={() => bulkChangeStatus(status)}
+                >
+                  {getVietnameseOrderStatus(status)}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
         {orderListQuery.isPending && <TableSkeleton />}
         {!orderListQuery.isPending && (
-          <div className='rounded-md border'>
+          <>
+            {/* Mobile card view */}
+            <div className='md:hidden space-y-2'>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <OrderCardMobile
+                    key={row.id}
+                    order={row.original}
+                    onEdit={() => setOrderIdEdit(row.original.id)}
+                  />
+                ))
+              ) : (
+                <p className='text-center text-muted-foreground py-8'>No results.</p>
+              )}
+            </div>
+            {/* Desktop table view */}
+            <div className='hidden md:block rounded-md border'>
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -186,7 +233,8 @@ export default function OrderTable() {
                 )}
               </TableBody>
             </Table>
-          </div>
+            </div>
+          </>
         )}
         <div className='flex items-center justify-end space-x-2 py-4'>
           <div className='text-xs text-muted-foreground py-4 flex-1 '>

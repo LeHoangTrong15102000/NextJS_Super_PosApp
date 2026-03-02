@@ -1,12 +1,12 @@
 import dishApiRequest from '@/apiRequests/dish'
-import { formatCurrency, generateSlugUrl, wrapServerApi } from '@/lib/utils'
+import { wrapServerApi } from '@/lib/utils'
 import { DishListResType } from '@/schemaValidations/dish.schema'
 import Image from 'next/image'
-import { Link } from '@/i18n/routing'
 import { getTranslations } from 'next-intl/server'
 import { setRequestLocale } from 'next-intl/server'
 import envConfig, { Locale } from '@/config'
 import { htmlToTextForDescription } from '@/lib/server-utils'
+import DishFilter from '@/app/[locale]/(public)/dish-filter'
 
 export async function generateMetadata(props: { params: Promise<{ locale: Locale }> }) {
   const params = await props.params
@@ -55,35 +55,7 @@ export default async function Home(props: { params: Promise<{ locale: string }> 
       </section>
       <section className='space-y-10 py-16'>
         <h2 className='text-center text-2xl font-bold'>{t('h2')}</h2>
-        <div className='grid grid-cols-1 sm:grid-cols-2 gap-10'>
-          {dishList.map((dish) => (
-            <Link
-              href={`/dishes/${generateSlugUrl({
-                name: dish.name,
-                id: dish.id
-              })}`}
-              className='flex gap-4 w'
-              key={dish.id}
-            >
-              <div className='flex-shrink-0'>
-                <Image
-                  src={dish.image}
-                  width={150}
-                  height={150}
-                  quality={80}
-                  loading='lazy'
-                  alt={dish.name}
-                  className='object-cover w-[150px] h-[150px] rounded-md'
-                />
-              </div>
-              <div className='space-y-1'>
-                <h3 className='text-xl font-semibold'>{dish.name}</h3>
-                <p className=''>{dish.description}</p>
-                <p className='font-semibold'>{formatCurrency(dish.price)}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
+        <DishFilter dishes={dishList} />
       </section>
     </div>
   )

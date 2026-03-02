@@ -32,9 +32,9 @@ function LogoutComponent() {
         setRole()
         disconnectSocket()
       })
-    } else if (!clearTokens) {
-      router.push('/')
     }
+    // Only redirect if clearTokens param was provided but no tokens exist
+    // Don't redirect when no clearTokens param at all (normal login page visit)
   }, [
     mutateAsync,
     router,

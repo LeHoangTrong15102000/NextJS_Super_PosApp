@@ -1,13 +1,11 @@
 'use client'
 
-import { TrendingUp } from 'lucide-react'
 import { Bar, BarChart, XAxis, YAxis } from 'recharts'
 
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle
 } from '@/components/ui/card'
@@ -21,35 +19,35 @@ import { DashboardIndicatorResType } from '@/schemaValidations/indicator.schema'
 import { useMemo } from 'react'
 
 const colors = [
-  'var(--color-chrome)',
-  'var(--color-safari)',
-  'var(--color-firefox)',
-  'var(--color-edge)',
-  'var(--color-other)'
+  'hsl(var(--chart-1))',
+  'hsl(var(--chart-2))',
+  'hsl(var(--chart-3))',
+  'hsl(var(--chart-4))',
+  'hsl(var(--chart-5))'
 ]
 
 const chartConfig = {
-  visitors: {
-    label: 'Visitors'
+  successOrders: {
+    label: 'Đơn thành công'
   },
-  chrome: {
-    label: 'Chrome',
+  dish1: {
+    label: 'Món 1',
     color: 'var(--chart-1)'
   },
-  safari: {
-    label: 'Safari',
+  dish2: {
+    label: 'Món 2',
     color: 'var(--chart-2)'
   },
-  firefox: {
-    label: 'Firefox',
+  dish3: {
+    label: 'Món 3',
     color: 'var(--chart-3)'
   },
-  edge: {
-    label: 'Edge',
+  dish4: {
+    label: 'Món 4',
     color: 'var(--chart-4)'
   },
-  other: {
-    label: 'Other',
+  dish5: {
+    label: 'Món 5',
     color: 'var(--chart-5)'
   }
 } satisfies ChartConfig
@@ -94,11 +92,7 @@ export function DishBarChart({
               tickLine={false}
               tickMargin={2}
               axisLine={false}
-              tickFormatter={(value) => {
-                return value
-
-                // return chartConfig[value as keyof typeof chartConfig]?.label
-              }}
+              tickFormatter={(value) => value}
             />
             <XAxis dataKey='successOrders' type='number' hide />
             <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
@@ -110,14 +104,6 @@ export function DishBarChart({
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className='flex-col items-start gap-2 text-sm'>
-        {/* <div className='flex gap-2 font-medium leading-none'>
-          Trending up by 5.2% this month <TrendingUp className='h-4 w-4' />
-        </div> */}
-        {/* <div className='leading-none text-muted-foreground'>
-          Showing total visitors for the last 6 months
-        </div> */}
-      </CardFooter>
     </Card>
   )
 }

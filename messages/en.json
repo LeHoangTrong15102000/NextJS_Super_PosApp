@@ -36,6 +36,10 @@
     "title": "Manage accounts",
     "description": "Manage employee accounts"
   },
+  "ManageGuests": {
+    "title": "Manage guests",
+    "description": "Manage guest list"
+  },
   "Dashboard": {
     "title": "Dashboard",
     "description": "View and analyze sales data"

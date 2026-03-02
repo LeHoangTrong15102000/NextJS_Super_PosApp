@@ -15,7 +15,9 @@ import {
   PayGuestOrdersResType
 } from '@/schemaValidations/order.schema'
 import Image from 'next/image'
-import { Fragment } from 'react'
+import { Fragment, useRef } from 'react'
+import Receipt from '@/app/[locale]/manage/orders/receipt'
+import { Printer } from 'lucide-react'
 
 type Guest = GetOrdersResType['data'][0]['guest']
 type Orders = GetOrdersResType['data']
@@ -173,6 +175,29 @@ export default function OrderGuestDetail({
         >
           Thanh toán tất cả ({ordersFilterToPurchase.length} đơn)
         </Button>
+      </div>
+      <div>
+        <Button
+          className='w-full'
+          size={'sm'}
+          variant={'outline'}
+          onClick={() => {
+            const printWindow = window.open('', '_blank', 'width=400,height=600')
+            if (!printWindow) return
+            const receiptEl = document.getElementById(`receipt-${guest?.id}`)
+            if (!receiptEl) return
+            printWindow.document.write('<html><head><title>Hóa đơn</title></head><body>')
+            printWindow.document.write(receiptEl.innerHTML)
+            printWindow.document.write('</body></html>')
+            printWindow.document.close()
+            printWindow.print()
+          }}
+        >
+          <Printer className='h-4 w-4 mr-1' /> In hóa đơn
+        </Button>
+      </div>
+      <div className='hidden' id={`receipt-${guest?.id}`}>
+        <Receipt guest={guest} orders={orders} />
       </div>
     </div>
   )
