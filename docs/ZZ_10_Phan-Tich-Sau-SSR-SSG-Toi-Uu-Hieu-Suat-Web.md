@@ -1,4 +1,4 @@
-# Phân Tích Sâu: SSR, SSG và Hybrid Strategies cho Tối Ưu Hiệu Suất Web
+# Phân Tích Sâu: SSR, SSG và Hybrid Strategies cho Tối Ưu Hiệu Suất Web (Cập nhật Next.js 16)
 
 ## 📋 Mục Lục
 
@@ -7,6 +7,8 @@
 3. [Dự Án Tối Ưu Chỉ với SSG](#dự-án-tối-ưu-chỉ-với-ssg)
 4. [Dự Án Hybrid: SSR + SSG](#dự-án-hybrid-ssr--ssg)
 5. [So Sánh Chi Tiết và Kết Luận](#so-sánh-chi-tiết-và-kết-luận)
+
+> **Lưu ý**: Tài liệu này sử dụng **App Router** (Next.js 16). Các ví dụ config đã được cập nhật để loại bỏ experimental flags đã bị removed/deprecated.
 
 ---
 
@@ -47,7 +49,7 @@ Mỗi dự án sẽ được phân tích với **full technical implementation**
 #### **1. Core SSR Setup**
 
 ```typescript
-// next.config.ts - SSR Optimized Configuration
+// next.config.ts - SSR Optimized Configuration (Next.js 16)
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
@@ -61,37 +63,11 @@ const nextConfig: NextConfig = {
     emotion: true
   },
 
-  // Experimental features cho SSR performance
-  experimental: {
-    // Server components optimization
-    serverComponentsExternalPackages: ['prisma', '@prisma/client'],
+  // Server external packages (đã ra khỏi experimental)
+  serverExternalPackages: ['prisma', '@prisma/client'],
 
-    // Dynamic runtime optimization
-    runtime: 'nodejs', // Explicit nodejs runtime
-
-    // Memory optimization
-    isrMemoryCacheSize: 0, // Tắt ISR cache
-
-    // Response streaming
-    appDir: true,
-    serverActions: true
-  },
-
-  // Webpack optimization cho SSR bundles
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      // Server-side bundle optimization
-      config.optimization.splitChunks = false // Không split chunks trên server
-
-      // Database connection optimization
-      config.externals.push('@prisma/client')
-
-      // Memory management
-      config.optimization.moduleIds = 'deterministic'
-    }
-
-    return config
-  },
+  // Turbopack là default trong Next.js 16
+  // Dùng --webpack flag nếu cần custom webpack config
 
   // Headers cho real-time performance
   async headers() {
@@ -114,9 +90,9 @@ export default nextConfig
 #### **2. Advanced SSR Data Fetching Strategy**
 
 ```typescript
-// lib/ssr-data-fetching.ts
+// lib/ssr-data-fetching.ts (App Router pattern)
 import { cache } from 'react'
-import { Suspense } from 'react'
+import { cookies } from 'next/headers'
 
 // Optimized database connection pool
 const getDatabaseConnection = cache(() => {
@@ -128,22 +104,23 @@ const getDatabaseConnection = cache(() => {
   })
 })
 
-// Smart data prefetching với parallel requests
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  const { req, res, query } = context
+// App Router: Data fetching trực tiếp trong Server Component
+// app/dashboard/page.tsx
+export const dynamic = 'force-dynamic' // Đảm bảo SSR mỗi request
 
-  // Set aggressive caching headers cho static assets
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+export default async function DashboardPage() {
+  const cookieStore = await cookies()
+  const userToken = cookieStore.get('authToken')?.value
 
   try {
-    const userId = getUserFromToken(req.cookies.authToken)
+    const userId = getUserFromToken(userToken)
 
-    // Parallel data fetching - tất cả queries chạy đồng thời
+    // Parallel data fetching — tất cả queries chạy đồng thời
     const [userProfile, dashboardConfig, realTimeMetrics, historicalData, alerts] = await Promise.allSettled([
       getUserProfile(userId),
       getDashboardConfig(userId),
       getRealTimeMetrics(userId), // Data từ Redis/InfluxDB
-      getHistoricalData(userId, query.timeRange),
+      getHistoricalData(userId),
       getActiveAlerts(userId)
     ])
 
@@ -156,21 +133,10 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       alerts: alerts.status === 'fulfilled' ? alerts.value : []
     }
 
-    return {
-      props: {
-        ...data,
-        timestamp: Date.now(), // Để tracking freshness
-        renderTime: performance.now()
-      }
-    }
+    return <RealTimeDashboard initialData={data} timestamp={Date.now()} />
   } catch (error) {
     // Graceful degradation
-    return {
-      props: {
-        error: 'Failed to load dashboard data',
-        fallbackMode: true
-      }
-    }
+    return <DashboardFallback error='Failed to load dashboard data' />
   }
 }
 ```
@@ -302,16 +268,10 @@ const prisma = new PrismaClient({
   },
 
   // Query optimization
-  log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn'] : [],
+  log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn'] : []
 
-  // Connection pool optimization cho SSR workload
-  __internal: {
-    engine: {
-      connectionLimit: 30, // Cao hơn cho SSR concurrent requests
-      poolTimeout: 60, // Timeout dài hơn
-      maxIdleTimeout: 30
-    }
-  }
+  // Connection pool được config qua DATABASE_URL query params:
+  // ?connection_limit=30&pool_timeout=60
 })
 
 // Query-level caching cho frequent data
@@ -537,29 +497,27 @@ export async function cachedSSRResponse(key: string, generator: () => Promise<an
 #### **3. Error Handling và Graceful Degradation**
 
 ```typescript
-// pages/dashboard.tsx
-export async function getServerSideProps(context) {
+// app/dashboard/page.tsx — App Router error handling
+import { cookies } from 'next/headers'
+
+export const dynamic = 'force-dynamic'
+
+export default async function DashboardPage() {
+  const cookieStore = await cookies()
+  const userId = getUserFromToken(cookieStore.get('authToken')?.value)
+
   try {
     const data = await getDashboardData(userId)
-    return { props: { data } }
-  } catch (error) {
+    return <Dashboard data={data} />
+  } catch (error: any) {
     // Fallback strategies
     if (error.code === 'DATABASE_TIMEOUT') {
-      return {
-        props: {
-          fallbackData: await getCachedDashboardData(userId),
-          degradedMode: true
-        }
-      }
+      const fallbackData = await getCachedDashboardData(userId)
+      return <Dashboard data={fallbackData} degradedMode />
     }
 
     // Complete fallback
-    return {
-      props: {
-        error: 'Service temporarily unavailable',
-        showRetry: true
-      }
-    }
+    return <DashboardError message='Service temporarily unavailable' showRetry />
   }
 }
 ```
@@ -579,7 +537,7 @@ export async function getServerSideProps(context) {
 #### **1. Advanced SSG Configuration**
 
 ```typescript
-// next.config.ts - SSG Optimized Configuration
+// next.config.ts - SSG Optimized Configuration (Next.js 16)
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
@@ -594,7 +552,7 @@ const nextConfig: NextConfig = {
     loaderFile: './lib/cloudinary-loader.ts', // Custom CDN loader
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384]
+    imageSizes: [32, 48, 64, 96, 128, 256, 384] // 16 đã bị remove khỏi default trong Next.js 16
   },
 
   // Compiler optimizations
@@ -607,66 +565,11 @@ const nextConfig: NextConfig = {
     }
   },
 
-  // Experimental features cho build performance
-  experimental: {
-    // Parallel build optimization
-    cpus: Math.max(1, (require('os').cpus().length || 1) - 1),
+  // Optimize package imports (đã ra khỏi experimental)
+  optimizePackageImports: ['lodash-es', 'date-fns']
 
-    // Memory optimization
-    isrMemoryCacheSize: 0, // No ISR cho pure SSG
-    workerThreads: true,
-
-    // Static optimization
-    optimizeCss: true,
-    optimizeServerReact: false // Không cần Server Components
-  },
-
-  // Webpack optimization cho static builds
-  webpack: (config, { dev, isServer }) => {
-    if (!dev) {
-      // Production static optimizations
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        minSize: 20000,
-        minRemainingSize: 0,
-        minChunks: 1,
-        maxAsyncRequests: 30,
-        maxInitialRequests: 30,
-        cacheGroups: {
-          // Vendor splitting cho better caching
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            priority: 10,
-            chunks: 'all'
-          },
-
-          // Common components
-          common: {
-            name: 'common',
-            minChunks: 2,
-            chunks: 'all',
-            priority: 5,
-            reuseExistingChunk: true
-          },
-
-          // CSS extraction
-          styles: {
-            name: 'styles',
-            type: 'css/mini-extract',
-            chunks: 'all',
-            enforce: true
-          }
-        }
-      }
-
-      // Tree shaking optimization
-      config.optimization.usedExports = true
-      config.optimization.sideEffects = false
-    }
-
-    return config
-  }
+  // Lưu ý: Turbopack là default bundler trong Next.js 16
+  // Webpack config bên dưới chỉ áp dụng khi dùng: next build --webpack
 }
 
 export default nextConfig
@@ -734,39 +637,34 @@ export async function getAllPosts(): Promise<BlogPost[]> {
   })
 }
 
-// Advanced static paths generation với pagination
-export async function getStaticPaths() {
+// App Router: generateStaticParams thay thế getStaticPaths
+// app/posts/[slug]/page.tsx
+export async function generateStaticParams() {
+  const posts = await getAllPosts()
+
+  // Generate params cho tất cả posts
+  return posts.map((post) => ({
+    slug: post.slug
+  }))
+}
+
+// app/posts/page/[page]/page.tsx
+export async function generateStaticParams() {
   const posts = await getAllPosts()
   const postsPerPage = 12
   const totalPages = Math.ceil(posts.length / postsPerPage)
 
-  // Generate paths cho tất cả posts và pagination
-  const paths = [
-    // Individual post paths
-    ...posts.map((post) => ({
-      params: { slug: post.slug }
-    })),
+  return Array.from({ length: totalPages }, (_, i) => ({
+    page: (i + 1).toString()
+  }))
+}
 
-    // Pagination paths
-    ...Array.from({ length: totalPages }, (_, i) => ({
-      params: { page: (i + 1).toString() }
-    })),
-
-    // Category paths
-    ...getUniqueCategories(posts).map((category) => ({
-      params: { category: category.slug }
-    })),
-
-    // Tag paths
-    ...getUniqueTags(posts).map((tag) => ({
-      params: { tag: tag.slug }
-    }))
-  ]
-
-  return {
-    paths,
-    fallback: false // No fallback cho pure SSG
-  }
+// app/categories/[category]/page.tsx
+export async function generateStaticParams() {
+  const posts = await getAllPosts()
+  return getUniqueCategories(posts).map((category) => ({
+    category: category.slug
+  }))
 }
 ```
 
@@ -1280,43 +1178,38 @@ export function getRenderingStrategy(pathname: string): RenderingStrategy {
 #### **2. Hybrid Next.js Configuration**
 
 ```typescript
-// next.config.ts - Hybrid Optimized
+// next.config.ts - Hybrid Optimized (Next.js 16)
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   // Hybrid output configuration
   // Không set output để enable both static và server-side
 
-  // Experimental features cho hybrid performance
-  experimental: {
-    // PPR (Partial Prerendering) - Future of hybrid rendering
-    ppr: true,
+  // Cache Components — thay thế experimental.ppr (Next.js 16)
+  cacheComponents: true,
 
-    // Server actions cho forms
-    serverActions: true,
+  // Optimized package imports (đã ra khỏi experimental)
+  optimizePackageImports: [
+    'lodash-es',
+    '@radix-ui/react-dialog',
+    '@radix-ui/react-dropdown-menu',
+    'date-fns',
+    'recharts'
+  ],
 
-    // Optimized package imports
-    optimizePackageImports: [
-      'lodash-es',
-      '@radix-ui/react-dialog',
-      '@radix-ui/react-dropdown-menu',
-      'date-fns',
-      'recharts'
-    ],
-
-    // Memory optimization
-    isrMemoryCacheSize: 50 * 1024 * 1024, // 50MB cho ISR cache
-
-    // Bundle optimization
-    bundlePagesExternals: true
-  },
+  // Server external packages (đã ra khỏi experimental)
+  serverExternalPackages: [],
 
   // Image optimization cho hybrid content
+  // Lưu ý: images.domains đã deprecated → dùng remotePatterns
   images: {
-    domains: ['cdn.example.com', 'images.unsplash.com'],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'cdn.example.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' }
+    ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
-    minimumCacheTTL: 86400, // 24 hours
+    // minimumCacheTTL default đã đổi thành 14400 (4 giờ) trong Next.js 16
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;"
   },
@@ -1330,64 +1223,6 @@ const nextConfig: NextConfig = {
           }
         : false,
     styledComponents: true // Cho styled-components nếu dùng
-  },
-
-  // Advanced webpack configuration
-  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Optimization based on environment
-    if (!dev) {
-      // Production optimizations
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        cacheGroups: {
-          // Vendor libraries
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-            priority: 10
-          },
-
-          // UI component libraries
-          ui: {
-            test: /[\\/]node_modules[\\/](@radix-ui|@headlessui)[\\/]/,
-            name: 'ui-components',
-            chunks: 'all',
-            priority: 15
-          },
-
-          // Chart libraries (heavy)
-          charts: {
-            test: /[\\/]node_modules[\\/](recharts|d3|chart\.js)[\\/]/,
-            name: 'charts',
-            chunks: 'async', // Lazy load
-            priority: 20
-          },
-
-          // Common components
-          common: {
-            name: 'common',
-            minChunks: 2,
-            chunks: 'all',
-            priority: 5,
-            reuseExistingChunk: true
-          }
-        }
-      }
-    }
-
-    // Bundle analysis
-    if (process.env.ANALYZE === 'true') {
-      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
-      config.plugins.push(
-        new BundleAnalyzerPlugin({
-          analyzerMode: 'server',
-          openAnalyzer: true
-        })
-      )
-    }
-
-    return config
   },
 
   // Performance headers
@@ -1426,180 +1261,74 @@ export default nextConfig
 #### **3. Smart Data Fetching Layer**
 
 ```typescript
-// lib/hybrid-data-fetching.ts
+// lib/hybrid-data-fetching.ts (App Router — Next.js 16)
 import { cache } from 'react'
-import { unstable_cache } from 'next/cache'
+import { cacheLife, cacheTag } from 'next/cache'
+import { cookies } from 'next/headers'
 
-// Multi-tier caching strategy
-export class HybridDataFetcher {
-  private memoryCache = new Map()
-  private readonly cacheConfig = {
-    products: { ttl: 300, revalidateOnStale: true },
-    categories: { ttl: 3600, revalidateOnStale: false },
-    users: { ttl: 60, revalidateOnStale: true },
-    inventory: { ttl: 30, revalidateOnStale: true }
-  }
+// Multi-tier caching strategy sử dụng "use cache" directive
+// Thay thế unstable_cache (đã stable trong Next.js 16)
 
-  // SSG Data Fetching - Build time
-  async getStaticProps(context: GetStaticPropsContext) {
-    const { params } = context
+// SSG Data Fetching — cached function
+async function getStaticPageData() {
+  'use cache'
+  cacheLife('max') // Cache lâu nhất có thể
+  cacheTag('static-content')
 
-    try {
-      // Parallel data fetching cho static content
-      const [categories, featuredProducts, siteConfig] = await Promise.all([
-        this.getCategoriesStatic(),
-        this.getFeaturedProductsStatic(),
-        this.getSiteConfigStatic()
-      ])
+  const [categories, featuredProducts, siteConfig] = await Promise.all([
+    fetchAllCategories(),
+    fetchFeaturedProducts(),
+    fetchSiteConfig()
+  ])
 
-      return {
-        props: {
-          categories,
-          featuredProducts,
-          siteConfig,
-          buildTime: new Date().toISOString()
-        },
-        revalidate: false // Pure static
-      }
-    } catch (error) {
-      return { notFound: true }
-    }
-  }
-
-  // ISR Data Fetching - Build time + Revalidation
-  async getStaticPropsISR(context: GetStaticPropsContext) {
-    const { params } = context
-    const productSlug = params?.slug as string
-
-    try {
-      // Cached data fetching với revalidation
-      const [product, relatedProducts, reviews] = await Promise.all([
-        this.getProductCached(productSlug),
-        this.getRelatedProductsCached(productSlug),
-        this.getProductReviewsCached(productSlug, { limit: 10 })
-      ])
-
-      if (!product) {
-        return { notFound: true }
-      }
-
-      return {
-        props: {
-          product,
-          relatedProducts,
-          reviews,
-          lastUpdated: new Date().toISOString()
-        },
-        revalidate: this.cacheConfig.products.ttl
-      }
-    } catch (error) {
-      // Graceful degradation
-      return {
-        props: {
-          error: 'Failed to load product',
-          fallback: true
-        },
-        revalidate: 60 // Retry sooner on error
-      }
-    }
-  }
-
-  // SSR Data Fetching - Request time
-  async getServerSideProps(context: GetServerSidePropsContext) {
-    const { req, res, params, query } = context
-
-    try {
-      // User-specific data
-      const user = await this.getUserFromRequest(req)
-
-      if (!user && this.requiresAuth(context.resolvedUrl)) {
-        return {
-          redirect: {
-            destination: '/login',
-            permanent: false
-          }
-        }
-      }
-
-      // Parallel fetching cho user-specific data
-      const [userProfile, cart, wishlist, recommendations] = await Promise.all([
-        user ? this.getUserProfile(user.id) : null,
-        user ? this.getUserCart(user.id) : null,
-        user ? this.getUserWishlist(user.id) : null,
-        user ? this.getPersonalizedRecommendations(user.id) : this.getDefaultRecommendations()
-      ])
-
-      // Set caching headers
-      res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate')
-
-      return {
-        props: {
-          user: userProfile,
-          cart,
-          wishlist,
-          recommendations,
-          timestamp: Date.now()
-        }
-      }
-    } catch (error) {
-      return {
-        props: {
-          error: 'Failed to load user data',
-          fallback: true
-        }
-      }
-    }
-  }
-
-  // Cached data fetchers với different strategies
-  getProductCached = unstable_cache(
-    async (slug: string) => {
-      return await this.fetchProductBySlug(slug)
-    },
-    ['product'],
-    {
-      revalidate: this.cacheConfig.products.ttl,
-      tags: ['products']
-    }
-  )
-
-  getCategoriesStatic = cache(async () => {
-    return await this.fetchAllCategories()
-  })
-
-  // Real-time data cho inventory
-  async getProductInventory(productId: string, useCache = true) {
-    const cacheKey = `inventory-${productId}`
-
-    if (useCache && this.memoryCache.has(cacheKey)) {
-      const cached = this.memoryCache.get(cacheKey)
-      if (Date.now() - cached.timestamp < this.cacheConfig.inventory.ttl * 1000) {
-        return cached.data
-      }
-    }
-
-    const inventory = await this.fetchProductInventory(productId)
-
-    this.memoryCache.set(cacheKey, {
-      data: inventory,
-      timestamp: Date.now()
-    })
-
-    return inventory
-  }
-
-  // Smart cache invalidation
-  async invalidateProductCache(productId: string) {
-    // Next.js cache invalidation
-    await fetch(`/api/revalidate?tag=products&id=${productId}`)
-
-    // Memory cache invalidation
-    this.memoryCache.delete(`product-${productId}`)
-    this.memoryCache.delete(`inventory-${productId}`)
-  }
+  return { categories, featuredProducts, siteConfig }
 }
 
-export const dataFetcher = new HybridDataFetcher()
+// ISR Data Fetching — cached với revalidation
+async function getProductData(slug: string) {
+  'use cache'
+  cacheLife('hours') // Revalidate mỗi vài giờ
+  cacheTag('products', `product-${slug}`)
+
+  const [product, relatedProducts, reviews] = await Promise.all([
+    fetchProductBySlug(slug),
+    fetchRelatedProducts(slug),
+    fetchProductReviews(slug, { limit: 10 })
+  ])
+
+  return { product, relatedProducts, reviews }
+}
+
+// SSR Data Fetching — không cache, chạy mỗi request
+async function getUserPageData() {
+  const cookieStore = await cookies()
+  const token = cookieStore.get('authToken')?.value
+
+  if (!token) return null
+
+  const user = getUserFromToken(token)
+
+  const [userProfile, cart, wishlist, recommendations] = await Promise.all([
+    getUserProfile(user.id),
+    getUserCart(user.id),
+    getUserWishlist(user.id),
+    getPersonalizedRecommendations(user.id)
+  ])
+
+  return { user: userProfile, cart, wishlist, recommendations }
+}
+
+// Cache invalidation (Next.js 16)
+async function invalidateProductCache(productId: string) {
+  'use server'
+  const { updateTag, revalidateTag } = await import('next/cache')
+
+  // Read-your-writes — user thấy data mới ngay
+  updateTag(`product-${productId}`)
+
+  // Stale-while-revalidate — background refresh
+  revalidateTag('products', 'max')
+}
 ```
 
 #### **4. Component-Level Optimization Strategy**
@@ -1857,7 +1586,28 @@ export class HybridPerformanceMonitor {
 
 ```typescript
 // Solution: Automated strategy detection
-// middleware.ts
+// Next.js 16: middleware.ts chạy trên Node.js runtime (không còn Edge)
+// Dùng proxy.ts cho lightweight routing, middleware.ts cho logic phức tạp hơn
+
+// proxy.ts — lightweight request routing (Next.js 16)
+// Chạy trước middleware, dùng cho simple routing/rewriting
+import type { NextRequest } from 'next/server'
+
+export function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  // Lightweight routing — không nên có heavy logic ở đây
+  // Redirect old product URLs
+  if (pathname.startsWith('/product/')) {
+    return Response.redirect(
+      new URL(pathname.replace('/product/', '/products/'), request.url),
+      301
+    )
+  }
+}
+
+// middleware.ts — Node.js runtime (Next.js 16)
+// Dùng cho logic phức tạp: auth check, strategy detection, logging
 import { NextRequest, NextResponse } from 'next/server'
 
 export function middleware(request: NextRequest) {
@@ -1875,6 +1625,7 @@ export function middleware(request: NextRequest) {
   return NextResponse.next()
 }
 
+// Lưu ý: matcher config vẫn hoạt động trong Next.js 16
 export const config = {
   matcher: '/((?!api|_next/static|_next/image|favicon.ico).*)'
 }
@@ -2107,12 +1858,13 @@ export class HybridMonitoring {
 3. **Performance optimization** là ongoing process, không phải one-time setup
 4. **Business requirements** should drive technical decisions, not vice versa
 
-#### **🚀 Future Trends:**
+#### **🚀 Current & Future Trends:**
 
-1. **Partial Prerendering (PPR)** sẽ simplify hybrid approaches
-2. **Edge computing** sẽ reduce SSR performance gaps
-3. **AI-driven optimization** sẽ automate strategy selection
-4. **WebAssembly** sẽ enable new performance paradigms
+1. **Cache Components (`"use cache"`)** đã thay thế PPR, cho phép cache ở component-level — hybrid rendering trở nên đơn giản hơn rất nhiều
+2. **Middleware trên Node.js runtime** (Next.js 16) — không còn giới hạn Edge runtime, có thể dùng full Node.js APIs
+3. **`proxy.ts`** — lightweight routing layer mới, tách biệt routing logic khỏi middleware
+4. **AI-driven optimization** sẽ automate strategy selection
+5. **WebAssembly** sẽ enable new performance paradigms
 
 #### **💡 Final Recommendations:**
 

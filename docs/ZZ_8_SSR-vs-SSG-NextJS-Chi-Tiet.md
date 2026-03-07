@@ -1,4 +1,4 @@
-# SSR vs SSG trong NextJS - Hướng Dẫn Chi Tiết
+# SSR vs SSG trong NextJS - Hướng Dẫn Chi Tiết (Cập nhật Next.js 16)
 
 ## 📋 Mục Lục
 
@@ -9,7 +9,10 @@
 5. [Phân Tích Source Code Thực Tế](#phân-tích-source-code-thực-tế)
 6. [Khi Nào Sử Dụng SSR vs SSG](#khi-nào-sử-dụng-ssr-vs-ssg)
 7. [Incremental Static Regeneration (ISR)](#incremental-static-regeneration-isr)
-8. [Kết Luận và Best Practices](#kết-luận-và-best-practices)
+8. [Cache Components (Next.js 16)](#cache-components-nextjs-16)
+9. [Kết Luận và Best Practices](#kết-luận-và-best-practices)
+
+> **Lưu ý**: Tài liệu này sử dụng **App Router** (Next.js 13+). Các API Pages Router như `getStaticProps`, `getServerSideProps`, `getStaticPaths` chỉ hoạt động trong thư mục `pages/` và không được sử dụng trong App Router.
 
 ---
 
@@ -45,12 +48,12 @@ graph LR
 
 **SSG tạo HTML tại build time và tái sử dụng cho mọi request.**
 
-### 🛠️ Cách Implement
+### 🛠️ Cách Implement (App Router)
 
 #### 1. SSG Không Cần Data
 
 ```tsx
-// pages/about.tsx
+// app/about/page.tsx — Server Component (mặc định)
 export default function About() {
   return (
     <div>
@@ -59,26 +62,26 @@ export default function About() {
     </div>
   )
 }
-// Tự động được pre-render tại build time
+// Tự động được pre-render tại build time vì không có dynamic API nào được gọi
 ```
 
-#### 2. SSG Với Data - sử dụng `getStaticProps`
+#### 2. SSG Với Data — async Server Component
 
 ```tsx
-// pages/products.tsx
-import { GetStaticProps } from 'next'
-
+// app/products/page.tsx — Server Component
 interface Product {
   id: number
   name: string
   price: number
 }
 
-interface Props {
-  products: Product[]
-}
+export default async function Products() {
+  // Fetch data tại build time (mặc định cache: 'force-cache')
+  const res = await fetch('https://api.example.com/products', {
+    cache: 'force-cache' // SSG — cache vĩnh viễn cho đến khi rebuild
+  })
+  const products: Product[] = await res.json()
 
-export default function Products({ products }: Props) {
   return (
     <div>
       <h1>Sản Phẩm</h1>
@@ -91,72 +94,43 @@ export default function Products({ products }: Props) {
     </div>
   )
 }
-
-// Hàm này chạy tại BUILD TIME
-export const getStaticProps: GetStaticProps = async () => {
-  // Fetch data từ API hoặc database
-  const res = await fetch('https://api.example.com/products')
-  const products = await res.json()
-
-  return {
-    props: {
-      products
-    },
-    // Optional: revalidate sau 60 giây (ISR)
-    revalidate: 60
-  }
-}
 ```
 
-#### 3. SSG Với Dynamic Routes - sử dụng `getStaticPaths`
+#### 3. SSG Với Dynamic Routes — `generateStaticParams`
 
 ```tsx
-// pages/products/[id].tsx
-import { GetStaticProps, GetStaticPaths } from 'next'
-
+// app/products/[id]/page.tsx — Server Component
 interface Product {
   id: string
   name: string
   description: string
 }
 
-interface Props {
-  product: Product
+// Tạo danh sách params cần pre-render tại build time
+export async function generateStaticParams() {
+  const res = await fetch('https://api.example.com/products')
+  const products: Product[] = await res.json()
+
+  return products.map((product) => ({
+    id: product.id
+  }))
 }
 
-export default function ProductDetail({ product }: Props) {
+export default async function ProductDetail({
+  params
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+  const res = await fetch(`https://api.example.com/products/${id}`)
+  const product: Product = await res.json()
+
   return (
     <div>
       <h1>{product.name}</h1>
       <p>{product.description}</p>
     </div>
   )
-}
-
-// Tạo danh sách paths cần pre-render
-export const getStaticPaths: GetStaticPaths = async () => {
-  const res = await fetch('https://api.example.com/products')
-  const products = await res.json()
-
-  const paths = products.map((product: Product) => ({
-    params: { id: product.id }
-  }))
-
-  return {
-    paths,
-    fallback: false // hoặc true, 'blocking'
-  }
-}
-
-export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const res = await fetch(`https://api.example.com/products/${params?.id}`)
-  const product = await res.json()
-
-  return {
-    props: {
-      product
-    }
-  }
 }
 ```
 
@@ -191,13 +165,13 @@ graph LR
 
 **SSR tạo HTML mới cho mỗi request.**
 
-### 🛠️ Cách Implement
+### 🛠️ Cách Implement (App Router)
 
-#### Sử dụng `getServerSideProps`
+#### Server Component với dynamic data
 
 ```tsx
-// pages/dashboard.tsx
-import { GetServerSideProps } from 'next'
+// app/dashboard/page.tsx — Server Component
+import { cookies, headers } from 'next/headers'
 
 interface User {
   id: number
@@ -205,45 +179,33 @@ interface User {
   email: string
 }
 
-interface Props {
-  user: User
-  currentTime: string
-}
+export default async function Dashboard() {
+  const cookieStore = await cookies()
+  const userToken = cookieStore.get('authToken')?.value
 
-export default function Dashboard({ user, currentTime }: Props) {
+  // Fetch fresh data cho mỗi request
+  const userRes = await fetch('https://api.example.com/user', {
+    headers: {
+      Authorization: `Bearer ${userToken}`
+    },
+    cache: 'no-store' // SSR — không cache, luôn fetch mới
+  })
+  const user: User = await userRes.json()
+
   return (
     <div>
       <h1>Dashboard - {user.name}</h1>
       <p>Email: {user.email}</p>
-      <p>Thời gian hiện tại: {currentTime}</p>
+      <p>Thời gian hiện tại: {new Date().toISOString()}</p>
     </div>
   )
 }
-
-// Hàm này chạy trên SERVER cho MỖI REQUEST
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { req, res, query } = context
-
-  // Có thể access cookies, headers, etc.
-  const userToken = req.cookies.authToken
-
-  // Fetch fresh data
-  const userRes = await fetch(`https://api.example.com/user`, {
-    headers: {
-      Authorization: `Bearer ${userToken}`
-    }
-  })
-  const user = await userRes.json()
-
-  // Trả về props cho component
-  return {
-    props: {
-      user,
-      currentTime: new Date().toISOString()
-    }
-  }
-}
 ```
+
+> **Lưu ý**: Trong App Router, một page trở thành SSR (dynamic) khi sử dụng:
+> - `cookies()`, `headers()`, `searchParams`
+> - `fetch()` với `cache: 'no-store'`
+> - `export const dynamic = 'force-dynamic'`
 
 ### 🎯 Ưu Điểm của SSR
 
@@ -424,7 +386,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 1. **Content ít thay đổi**
 
    ```tsx
-   // Landing pages, about pages
+   // app/about/page.tsx — tự động SSG
    export default function About() {
      return <div>About our company...</div>
    }
@@ -433,20 +395,24 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 2. **Blog posts, documentation**
 
    ```tsx
-   // Blog list page
-   export const getStaticProps = async () => {
+   // app/blog/page.tsx — ISR với revalidate
+   export const revalidate = 3600 // Revalidate mỗi 1 giờ
+
+   export default async function BlogList() {
      const posts = await getBlogPosts()
-     return { props: { posts }, revalidate: 3600 } // 1 hour
+     return <div>{/* render posts */}</div>
    }
    ```
 
 3. **E-commerce product listings**
 
    ```tsx
-   // Product catalog
-   export const getStaticProps = async () => {
+   // app/products/page.tsx — ISR
+   export const revalidate = 300 // 5 phút
+
+   export default async function ProductCatalog() {
      const products = await getProducts()
-     return { props: { products }, revalidate: 300 } // 5 minutes
+     return <div>{/* render products */}</div>
    }
    ```
 
@@ -457,32 +423,42 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 1. **Data thường xuyên thay đổi**
 
    ```tsx
-   // Real-time dashboard
-   export const getServerSideProps = async () => {
+   // app/dashboard/page.tsx — force dynamic
+   export const dynamic = 'force-dynamic'
+
+   export default async function Dashboard() {
      const liveData = await getRealTimeData()
-     return { props: { liveData } }
+     return <div>{/* render live data */}</div>
    }
    ```
 
 2. **Cần personalization**
 
    ```tsx
-   // User dashboard
-   export const getServerSideProps = async (context) => {
-     const user = await getUserFromToken(context.req.cookies.token)
+   // app/dashboard/page.tsx — dynamic vì dùng cookies()
+   import { cookies } from 'next/headers'
+
+   export default async function UserDashboard() {
+     const cookieStore = await cookies()
+     const token = cookieStore.get('token')?.value
+     const user = await getUserFromToken(token)
      const personalData = await getPersonalData(user.id)
-     return { props: { user, personalData } }
+     return <div>{/* render user data */}</div>
    }
    ```
 
 3. **Cần access request data**
 
    ```tsx
-   // Search results
-   export const getServerSideProps = async (context) => {
-     const { query } = context
-     const results = await searchProducts(query.q)
-     return { props: { results, query: query.q } }
+   // app/search/page.tsx — dynamic vì dùng searchParams
+   export default async function SearchResults({
+     searchParams
+   }: {
+     searchParams: Promise<{ q?: string }>
+   }) {
+     const { q } = await searchParams
+     const results = await searchProducts(q)
+     return <div>{/* render results */}</div>
    }
    ```
 
@@ -508,18 +484,26 @@ graph TD
     H --> I[Next Request Gets Fresh HTML]
 ```
 
-### 🛠️ Implement ISR
+### 🛠️ Implement ISR (App Router)
 
 #### 1. Time-based Revalidation
 
 ```tsx
-export const getStaticProps = async () => {
-  const products = await getProducts()
+// app/products/page.tsx — ISR với Route Segment Config
+export const revalidate = 60 // Revalidate mỗi 60 giây
 
-  return {
-    props: { products },
-    revalidate: 60 // Revalidate mỗi 60 giây
-  }
+export default async function Products() {
+  const products = await getProducts()
+  return <div>{/* render products */}</div>
+}
+
+// Hoặc dùng fetch-level revalidation
+export default async function Products() {
+  const res = await fetch('https://api.example.com/products', {
+    next: { revalidate: 60 } // ISR — revalidate mỗi 60 giây
+  })
+  const products = await res.json()
+  return <div>{/* render products */}</div>
 }
 ```
 
@@ -578,22 +562,22 @@ Câu hỏi quyết định:
 
 ### 🎯 Best Practices
 
-#### 1. **Hybrid Approach**
+#### 1. **Hybrid Approach (App Router)**
 
 ```tsx
-// Một app có thể mix nhiều strategies
-pages/
-├── index.tsx          // SSG - Landing page
+// Một app có thể mix nhiều strategies trong App Router
+app/
+├── page.tsx                    // SSG - Landing page (không dùng dynamic API)
 ├── blog/
-│   ├── index.tsx      // ISR - Blog list (revalidate: 3600)
-│   └── [slug].tsx     // ISR - Blog posts (revalidate: 1800)
+│   ├── page.tsx                // ISR - Blog list (revalidate = 3600)
+│   └── [slug]/page.tsx         // ISR - Blog posts (revalidate = 1800)
 ├── products/
-│   ├── index.tsx      // ISR - Product list (revalidate: 300)
-│   └── [id].tsx       // SSG với fallback - Product detail
+│   ├── page.tsx                // ISR - Product list (revalidate = 300)
+│   └── [id]/page.tsx           // SSG + generateStaticParams
 ├── dashboard/
-│   └── index.tsx      // SSR - User dashboard
+│   └── page.tsx                // SSR - dùng cookies() → dynamic
 └── search/
-    └── index.tsx      // SSR - Search results
+    └── page.tsx                // SSR - dùng searchParams → dynamic
 ```
 
 #### 2. **Performance Optimization**
@@ -616,9 +600,14 @@ const DynamicComponent = dynamic(() => import('./HeavyComponent'), {
 #### 3. **SEO Optimization**
 
 ```tsx
-// Dynamic metadata cho SEO
-export async function generateMetadata({ params }): Promise<Metadata> {
-  const product = await getProduct(params.id)
+// Dynamic metadata cho SEO (App Router)
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const product = await getProduct(id)
 
   return {
     title: `${product.name} - Our Store`,
@@ -632,19 +621,92 @@ export async function generateMetadata({ params }): Promise<Metadata> {
 }
 ```
 
+---
+
+## 🧩 Cache Components (Next.js 16)
+
+### 🔧 Mô Hình Mới
+
+Next.js 16 giới thiệu **Cache Components** — mô hình caching hoàn toàn opt-in sử dụng directive `"use cache"`. Đây là sự tiến hóa của PPR (Partial Prerendering).
+
+```tsx
+// next.config.ts — Bật Cache Components
+const nextConfig = {
+  cacheComponents: true
+}
+export default nextConfig
+```
+
+### 🛠️ Sử Dụng `"use cache"`
+
+```tsx
+// app/products/page.tsx — Cache toàn bộ page
+'use cache'
+
+export default async function Products() {
+  const products = await getProducts()
+  return <div>{/* render products — cached */}</div>
+}
+```
+
+```tsx
+// Hoặc cache ở function level
+import { cacheLife, cacheTag } from 'next/cache'
+
+async function getProducts() {
+  'use cache'
+  cacheLife('hours')        // Cache profile: hours
+  cacheTag('products')      // Tag để invalidate
+
+  const res = await fetch('https://api.example.com/products')
+  return res.json()
+}
+```
+
+### 🔄 Invalidation APIs (Next.js 16)
+
+```tsx
+'use server'
+import { revalidateTag, updateTag } from 'next/cache'
+
+// Stale-while-revalidate — user thấy data cũ trong khi revalidate
+export async function refreshProducts() {
+  revalidateTag('products', 'max')
+}
+
+// Read-your-writes — user thấy data mới ngay lập tức
+export async function updateProduct(id: string, data: ProductData) {
+  await db.products.update(id, data)
+  updateTag(`product-${id}`) // Expire + refresh ngay
+}
+```
+
+### 🎯 Ưu Điểm
+
+- ⚡ **Explicit caching** — không còn implicit cache gây confuse
+- 🧩 **Granular** — cache ở page, component, hoặc function level
+- 🔄 **PPR tích hợp** — mix static shell + dynamic content trong cùng 1 page
+- 🎯 **Compiler-driven** — cache keys tự động generate bởi compiler
+
 ### 🚀 Kết Luận Cuối Cùng
 
 1. **SSG**: Dành cho content tĩnh, performance cao nhất
 2. **SSR**: Dành cho dynamic, personalized content
 3. **ISR**: Sweet spot giữa SSG và SSR
-4. **Hybrid**: Sử dụng combination cho optimal results
+4. **Cache Components**: Mô hình mới trong Next.js 16 — explicit, granular caching với `"use cache"`
+5. **Hybrid**: Sử dụng combination cho optimal results
 
-**Nguyên tắc vàng**: Bắt đầu với **SSG** → chuyển sang **ISR** nếu cần → cuối cùng mới dùng **SSR**
+**Nguyên tắc vàng**: Bắt đầu với **SSG** → chuyển sang **ISR** nếu cần → dùng **Cache Components** cho granular control → cuối cùng mới dùng **SSR**
 
 ---
 
 ### 📚 Tài Liệu Tham Khảo
 
 - [NextJS Official Docs - Rendering](https://nextjs.org/docs/app/building-your-application/rendering)
-- [NextJS Learn - Data Fetching](https://nextjs.org/learn/pages-router/data-fetching)
-- [Vercel Blog - SSR vs SSG](https://vercel.com/blog/nextjs-server-side-rendering-vs-static-generation)
+- [NextJS Official Docs - Caching](https://nextjs.org/docs/app/building-your-application/caching)
+- [NextJS Blog - Next.js 16](https://nextjs.org/blog/next-16)
+- [NextJS Upgrade Guide - Version 16](https://nextjs.org/docs/app/guides/upgrading/version-16)
+
+---
+
+**Cập nhật**: Tháng 3/2026 — Phù hợp với Next.js 16.x App Router

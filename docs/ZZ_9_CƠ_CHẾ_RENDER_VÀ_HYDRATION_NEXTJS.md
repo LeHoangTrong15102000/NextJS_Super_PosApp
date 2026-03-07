@@ -1,4 +1,4 @@
-# Cơ chế Render và Hydration trong NextJS - Phân tích chi tiết
+# Cơ chế Render và Hydration trong NextJS - Phân tích chi tiết (Cập nhật Next.js 16)
 
 ## 📋 Tổng quan
 
@@ -38,11 +38,13 @@ src/app/
 
 Khi user truy cập lần đầu tiên (ví dụ: `/vi/manage/dashboard`):
 
-#### Bước 1: Middleware Execution
+#### Bước 1: Proxy Execution (trước đây là Middleware)
+
+> **Lưu ý Next.js 16**: `middleware.ts` đã được đổi tên thành `proxy.ts`. Function export cũng đổi từ `middleware` thành `proxy`. Proxy chạy trên Node.js runtime (không phải Edge).
 
 ```typescript
-// src/middleware.ts
-export function middleware(request: NextRequest) {
+// src/proxy.ts (trước đây là middleware.ts)
+export function proxy(request: NextRequest) {
   const handleI18nRouting = createMiddleware(routing)
   const response = handleI18nRouting(request)
 
@@ -380,11 +382,13 @@ export default async function DishPage({ params }) {
 ### 1. Bundle Splitting
 
 ```typescript
-// next.config.ts
+// next.config.ts (Next.js 16)
 export default {
-  experimental: {
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', 'recharts']
-  },
+  // optimizePackageImports đã ra khỏi experimental
+  optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', 'recharts'],
+
+  // Turbopack là default bundler trong Next.js 16
+  // Webpack config chỉ áp dụng khi dùng --webpack flag
   webpack: (config) => {
     config.optimization.splitChunks = {
       cacheGroups: {
@@ -460,6 +464,7 @@ useEffect(() => {
 2. **Navigation**: Client-side → RSC Payload → Incremental update
 3. **Real-time**: Socket.io → State update → Re-render
 4. **State**: Zustand (client) + React Query (server state)
+5. **Caching (Next.js 16)**: Cache Components với `"use cache"` directive — explicit, opt-in caching
 
 ### Ưu điểm:
 
@@ -468,11 +473,22 @@ useEffect(() => {
 - ✅ **Performance** với code splitting
 - ✅ **Real-time** capabilities
 - ✅ **Type safety** với TypeScript
+- ✅ **Explicit caching** với Cache Components (Next.js 16)
+
+### Thay đổi quan trọng trong Next.js 16:
+
+- 🔄 `middleware.ts` → `proxy.ts` (deprecated, sẽ bị removed)
+- 🔄 `experimental.ppr` → `cacheComponents: true`
+- 🔄 `experimental.turbopack` → `turbopack` (top-level)
+- 🔄 Turbopack là default bundler
+- 🆕 Cache Components với `"use cache"` directive
+- 🆕 `updateTag()`, `refresh()` APIs
+- 🆕 React 19.2: View Transitions, `<Activity/>`, `useEffectEvent()`
 
 ### Nhận xét của mentor về cơ bản là **CHÍNH XÁC** và phù hợp với lý thuyết NextJS App Router!
 
 ---
 
-**Tác giả**: AI Assistant  
-**Dựa trên**: Phân tích chi tiết NextJS Super PosApp source code  
-**Ngày**: $(date)
+**Tác giả**: AI Assistant
+**Dựa trên**: Phân tích chi tiết NextJS Super PosApp source code
+**Cập nhật**: Tháng 3/2026 — Phù hợp với Next.js 16.x
