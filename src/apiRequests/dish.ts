@@ -12,7 +12,10 @@ const dishApiRequest = {
   list: () =>
     http.get<DishListResType>('dishes', { next: { tags: ['dishes'] } }),
   add: (body: CreateDishBodyType) => http.post<DishResType>('dishes', body),
-  getDish: (id: number) => http.get<DishResType>(`dishes/${id}`),
+  getDish: (id: number) =>
+    http.get<DishResType>(`dishes/${id}`, {
+      next: { tags: ['dishes', `dish-${id}`] }
+    }),
   updateDish: (id: number, body: UpdateDishBodyType) =>
     http.put<DishResType>(`dishes/${id}`, body),
   deleteDish: (id: number) => http.delete<DishResType>(`dishes/${id}`)

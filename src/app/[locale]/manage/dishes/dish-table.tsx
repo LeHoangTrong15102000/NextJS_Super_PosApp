@@ -33,6 +33,7 @@ import EditDish from '@/app/[locale]/manage/dishes/edit-dish'
 import AddDish from '@/app/[locale]/manage/dishes/add-dish'
 import { useDeleteDishMutation } from '@/queries/useDish'
 import { toast } from '@/components/ui/use-toast'
+import revalidateApiRequest from '@/apiRequests/revalidate'
 import { useDishTable } from '@/app/[locale]/manage/dishes/use-dish-table'
 import DishCardMobile from '@/app/[locale]/manage/dishes/dish-card-mobile'
 
@@ -138,6 +139,7 @@ function AlertDialogDeleteDish({
     if (dishDelete) {
       try {
         const result = await mutateAsync(dishDelete.id)
+        await revalidateApiRequest('dishes')
         setDishDelete(null)
         toast({
           title: result.payload.message

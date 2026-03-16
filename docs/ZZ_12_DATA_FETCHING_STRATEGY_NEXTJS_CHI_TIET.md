@@ -333,7 +333,9 @@ const dishApiRequest = {
 
   add: (body: CreateDishBodyType) => http.post<DishResType>('dishes', body),
 
-  getDish: (id: number) => http.get<DishResType>(`dishes/${id}`),
+  getDish: (id: number) => http.get<DishResType>(`dishes/${id}`, {
+    next: { tags: ['dishes', `dish-${id}`] } // ✅ Cache tag cho individual dish + list revalidation
+  }),
 
   updateDish: (id: number, body: UpdateDishBodyType) => http.put<DishResType>(`dishes/${id}`, body),
 

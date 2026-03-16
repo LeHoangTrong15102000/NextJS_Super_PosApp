@@ -1,20 +1,18 @@
 import dishApiRequest from '@/apiRequests/dish'
-import indicatorApiRequest from '@/apiRequests/indicator'
 import { wrapServerApi } from '@/lib/utils'
 import { DishListResType } from '@/schemaValidations/dish.schema'
-import { DashboardIndicatorResType } from '@/schemaValidations/indicator.schema'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import { setRequestLocale } from 'next-intl/server'
 import envConfig, { Locale } from '@/config'
 import { htmlToTextForDescription } from '@/lib/server-utils'
 import DishFilter from '@/app/[locale]/(public)/dish-filter'
-import FeaturedDishes from '@/app/[locale]/(public)/featured-dishes'
-import StatsCounter from '@/app/[locale]/(public)/stats-counter'
+import IndicatorSection from '@/app/[locale]/(public)/indicator-section'
 import AboutTeaser from '@/app/[locale]/(public)/about-teaser'
 import ScrollAnimate from '@/components/scroll-animate'
 import { Link } from '@/i18n/routing'
-import { startOfMonth, endOfDay } from 'date-fns'
+
+export const revalidate = 3600
 
 export async function generateMetadata(props: { params: Promise<{ locale: Locale }> }) {
   const params = await props.params
@@ -41,23 +39,8 @@ export default async function Home(props: { params: Promise<{ locale: string }> 
   setRequestLocale(locale)
   const t = await getTranslations('HomePage')
 
-  const now = new Date()
-  const [dishResult, indicatorResult] = await Promise.allSettled([
-    wrapServerApi(dishApiRequest.list),
-    wrapServerApi(() =>
-      indicatorApiRequest.getDashboardIndicators({
-        fromDate: startOfMonth(now),
-        toDate: endOfDay(now)
-      })
-    )
-  ])
-
-  const dishList: DishListResType['data'] =
-    dishResult.status === 'fulfilled' ? (dishResult.value?.payload.data ?? []) : []
-  const indicatorData: DashboardIndicatorResType['data'] | null =
-    indicatorResult.status === 'fulfilled' ? (indicatorResult.value?.payload.data ?? null) : null
-
-  const dishIndicator = indicatorData?.dishIndicator ?? []
+  const dishResult = await wrapServerApi(dishApiRequest.list)
+  const dishList: DishListResType['data'] = dishResult?.payload.data ?? []
 
   return (
     <div className='w-full space-y-0'>
@@ -98,21 +81,8 @@ export default async function Home(props: { params: Promise<{ locale: string }> 
         </div>
       </section>
 
-      {/* Featured Dishes Section */}
-      {dishIndicator.length > 0 && (
-        <ScrollAnimate>
-          <FeaturedDishes dishIndicator={dishIndicator} />
-        </ScrollAnimate>
-      )}
-
-      {/* Stats Counter Section */}
-      <ScrollAnimate delay={100}>
-        <StatsCounter
-          dishCount={dishList.length}
-          orderCount={indicatorData?.orderCount ?? 0}
-          guestCount={indicatorData?.guestCount ?? 0}
-        />
-      </ScrollAnimate>
+      {/* Featured Dishes + Stats Counter (client-side indicator data) */}
+      <IndicatorSection dishCount={dishList.length} />
 
       {/* About Teaser Section */}
       <ScrollAnimate delay={150}>
@@ -123,7 +93,7 @@ export default async function Home(props: { params: Promise<{ locale: string }> 
       <ScrollAnimate>
         <section id='dish-listing' className='space-y-10 py-16 px-4 md:px-8'>
           <h2 className='text-center text-2xl font-bold'>{t('h2')}</h2>
-          <DishFilter dishes={dishList} dishIndicator={dishIndicator} />
+          <DishFilter dishes={dishList} />
         </section>
       </ScrollAnimate>
     </div>

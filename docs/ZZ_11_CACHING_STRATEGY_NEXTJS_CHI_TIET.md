@@ -211,7 +211,9 @@ const dishApiRequest = {
     http.get<DishListResType>('dishes', {
       next: { tags: ['dishes'] } // ✅ Cache tag cho revalidation
     }),
-  getDish: (id: number) => http.get<DishResType>(`dishes/${id}`)
+  getDish: (id: number) => http.get<DishResType>(`dishes/${id}`, {
+    next: { tags: ['dishes', `dish-${id}`] } // ✅ Cache tag cho individual dish + list revalidation
+  })
 }
 ```
 
@@ -393,7 +395,9 @@ const dishApiRequest = {
     http.get<DishListResType>('dishes', {
       next: { tags: ['dishes'] } // ✅ Cache tag cho revalidation
     }),
-  getDish: (id: number) => http.get<DishResType>(`dishes/${id}`)
+  getDish: (id: number) => http.get<DishResType>(`dishes/${id}`, {
+    next: { tags: ['dishes', `dish-${id}`] } // ✅ Cache tag cho individual dish + list revalidation
+  })
 }
 ```
 

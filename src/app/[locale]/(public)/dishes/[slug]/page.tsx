@@ -4,12 +4,26 @@ import envConfig, { Locale } from '@/config'
 import { htmlToTextForDescription } from '@/lib/server-utils'
 import { generateSlugUrl, getIdFromSlugUrl, wrapServerApi } from '@/lib/utils'
 import { baseOpenGraph } from '@/shared-metadata'
+import { DishStatus } from '@/constants/type'
 import { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { cache } from 'react'
+
+export const revalidate = 3600
+
 const getDetail = cache((id: number) =>
   wrapServerApi(() => dishApiRequest.getDish(id))
 )
+
+export async function generateStaticParams() {
+  const result = await wrapServerApi(dishApiRequest.list)
+  if (!result) return []
+  return result.payload.data
+    .filter((dish) => dish.status === DishStatus.Available)
+    .map((dish) => ({
+      slug: generateSlugUrl({ name: dish.name, id: dish.id })
+    }))
+}
 
 type Props = {
   params: Promise<{ slug: string; locale: Locale }>
