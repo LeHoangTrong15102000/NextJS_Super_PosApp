@@ -254,34 +254,33 @@ export default async function Home(props: { params: Promise<{ locale: string }> 
   setRequestLocale(locale)
   const t = await getTranslations('HomePage')
 
-  // ✅ SSG: Data được fetch tại build time
-  let dishList: DishListResType['data'] = []
-  try {
-    const result = await dishApiRequest.list()
-    const { payload: { data } } = result
-    dishList = data
-  } catch (error) {
-    return <div>Something went wrong</div>
-  }
+  // ✅ SSG: Data được fetch tại build time, dùng wrapServerApi để handle lỗi an toàn
+  // wrapServerApi bắt mọi exception (kể cả NEXT_REDIRECT) mà không crash trang
+  const result = await wrapServerApi(dishApiRequest.list)
+  const dishList: DishListResType['data'] = result?.payload.data ?? []
 
-  // Render static content với data
   return (
     <div className='w-full space-y-4'>
-      {/* Static banner */}
+      {/* Static banner — render tại build time */}
       <section className='relative z-10'>
-        <Image src='/banner.png' alt='Banner' />
+        <Image src='/banner.png' alt='Banner' width={400} height={200} priority />
         <h1>{t('title')}</h1>
       </section>
 
-      {/* Dynamic dish list - nhưng được render tại build time */}
-      <section>
-        {dishList.map((dish) => (
-          <Link href={`/dishes/${generateSlugUrl({...})}`} key={dish.id}>
-            <Image src={dish.image} alt={dish.name} />
-            <h3>{dish.name}</h3>
-            <p>{formatCurrency(dish.price)}</p>
-          </Link>
-        ))}
+      {/* Dish list — được pre-render tại build time, tái sử dụng cho mọi request */}
+      <section className='space-y-10 py-16'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 gap-10'>
+          {dishList.map((dish) => (
+            <Link
+              href={`/dishes/${generateSlugUrl({ name: dish.name, id: dish.id })}`}
+              key={dish.id}
+            >
+              <Image src={dish.image} alt={dish.name} width={150} height={150} />
+              <h3>{dish.name}</h3>
+              <p>{formatCurrency(dish.price)}</p>
+            </Link>
+          ))}
+        </div>
       </section>
     </div>
   )
@@ -325,28 +324,30 @@ export function generateStaticParams() {
 ```tsx
 // src/app/api/auth/login/route.ts
 export async function POST(request: Request) {
-  // ✅ SSR: Xử lý real-time tại request time
-  const body = (await request.json()) as LoginBodyType
-  const cookieStore = await cookies()
+  // ✅ Route Handler: Xử lý mỗi request (dynamic, không cache)
+  const validation = await validateRequestBody<LoginBodyType>(request, LoginBody)
+  if (validation.error) return validation.error
 
   try {
-    // Fresh API call mỗi request
-    const { payload } = await authApiRequest.sLogin(body)
+    // Server-to-server call đến Backend API
+    const { payload } = await authApiRequest.sLogin(validation.data)
     const { accessToken, refreshToken } = payload.data
 
-    // Set cookies với security
-    cookieStore.set('accessToken', accessToken, {
-      httpOnly: true,
-      secure: true
-      // ...
-    })
+    // setAuthCookies: Set cả AT + RT vào HTTP-only cookie với expiry từ JWT
+    // (dùng helper function, không set cookie thủ công)
+    await setAuthCookies(accessToken, refreshToken)
 
     return Response.json(payload)
   } catch (error) {
-    // Handle error
+    if (error instanceof HttpError) {
+      return createApiResponse(error.payload, error.status)
+    }
+    return createApiResponse({ message: 'Có lỗi xảy ra' }, 500)
   }
 }
 ```
+
+> **Lưu ý**: `setAuthCookies` trong `src/lib/cookie-utils.ts` dùng `verifyTokenExpiry()` để decode JWT và lấy `exp` field, sau đó set `expires` của cookie đúng bằng thời gian hết hạn của token — cookie và JWT luôn expire cùng lúc.
 
 #### 2. Dynamic Metadata Generation
 
@@ -355,16 +356,17 @@ export async function POST(request: Request) {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params
 
-  // ✅ SSR: Generate metadata dựa trên data real-time
+  // ✅ Dynamic Metadata: generate per-page metadata cho SEO
+  // Dùng hàm getDetail() có cache (React cache()) — cùng data với page component
+  // Gọi getDetail(id) nhiều lần trong cùng request sẽ chỉ fetch 1 lần (deduplication)
   const id = getIdFromSlugUrl(params.slug)
   const data = await getDetail(id)
   const dish = data?.payload.data
 
   if (!dish) {
-    return { title: t('notFound') }
+    return { title: 'Không tìm thấy món ăn' }
   }
 
-  // Dynamic metadata cho SEO
   return {
     title: dish.name,
     description: htmlToTextForDescription(dish.description),
@@ -375,6 +377,9 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     }
   }
 }
+
+// Cache function: React cache() đảm bảo cùng id chỉ gọi API 1 lần per request
+const getDetail = cache((id: number) => wrapServerApi(() => dishApiRequest.getDish(id)))
 ```
 
 ---

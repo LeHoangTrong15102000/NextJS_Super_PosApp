@@ -9,6 +9,8 @@
 5. [So Sánh Chi Tiết và Kết Luận](#so-sánh-chi-tiết-và-kết-luận)
 
 > **Lưu ý**: Tài liệu này sử dụng **App Router** (Next.js 16). Các ví dụ config đã được cập nhật để loại bỏ experimental flags đã bị removed/deprecated.
+>
+> **Về phạm vi phân tích**: Tài liệu này là **kiến thức tham khảo chung** với 3 dự án ví dụ giả định (Real-time Analytics Dashboard, High-Traffic Content Platform, E-commerce Platform). Đây **không phải** phân tích source code PosApp cụ thể — xem `ZZ_14_REFRESH_TOKEN_CLIENT_SERVER_COMPONENT_CHI_TIET.md` hoặc `ZZ_9_CƠ_CHẾ_RENDER_VÀ_HYDRATION_NEXTJS.md` để hiểu kiến trúc thực tế của dự án.
 
 ---
 
@@ -1861,8 +1863,8 @@ export class HybridMonitoring {
 #### **🚀 Current & Future Trends:**
 
 1. **Cache Components (`"use cache"`)** đã thay thế PPR, cho phép cache ở component-level — hybrid rendering trở nên đơn giản hơn rất nhiều
-2. **Middleware trên Node.js runtime** (Next.js 16) — không còn giới hạn Edge runtime, có thể dùng full Node.js APIs
-3. **`proxy.ts`** — lightweight routing layer mới, tách biệt routing logic khỏi middleware
+2. **Middleware** trong Next.js vẫn chạy trên Edge runtime mặc định — dùng `export const runtime = 'nodejs'` để opt-in vào Node.js runtime nếu cần full Node.js APIs
+3. **`src/proxy.ts`** trong dự án PosApp là **kiến trúc riêng** (không phải Next.js feature) — tổ chức middleware logic thành function `proxy()` để dễ test và maintain, thay vì viết thẳng vào `middleware.ts`
 4. **AI-driven optimization** sẽ automate strategy selection
 5. **WebAssembly** sẽ enable new performance paradigms
 
